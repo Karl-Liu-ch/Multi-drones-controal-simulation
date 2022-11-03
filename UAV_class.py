@@ -19,8 +19,8 @@ class drone():
         self.vx = self.vx + self.ax * self.dt
         self.vy = self.vy + self.ay * self.dt
         self.vz = self.vz + self.az * self.dt
-        print(self.ax, self.ay, self.az)
-
+        print(self.ay)
+        print(self.vy)
     def calculate_position(self):
         self.x = self.x + self.vx * self.dt + 0.5 * self.ax * (self.dt ** 2)
         self.y = self.y + self.vy * self.dt + 0.5 * self.ay * (self.dt ** 2)
