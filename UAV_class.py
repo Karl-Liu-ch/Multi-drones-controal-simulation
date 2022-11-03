@@ -29,18 +29,23 @@ class drone():
         
 drone_1 = drone(0,0,0,0,0,0,5 * np.random.randn(),5 * np.random.randn(),5 * np.random.randn(),0)
 
-px = []
-py = []
-pz = []
-pt = []
+drones = [drone(0,0,0,0,0,0,5 * np.random.randn(),5 * np.random.randn(),5 * np.random.randn(),0) for k in range(5)]
 
-for i in range(100):
-    drone_1.calculate_velocity()
-    drone_1.calculate_position()
-    drone_1.update_t()
-    x, y, z, vx, vy, vz, t = drone_1.x, drone_1.y, drone_1.z, drone_1.vx, drone_1.vy, drone_1.vz, drone_1.t
-    drone_1 = drone(x,y,z,vx,vy,vz,5 * np.random.randn(),5 * np.random.randn(),5 * np.random.randn(),t)
-    px.append(x)
-    py.append(y)
-    pz.append(z)
-    pt.append(t)
+px = [[] for k in range(len(drones))]
+py = [[] for k in range(len(drones))]
+pz = [[] for k in range(len(drones))]
+pt = [[] for k in range(len(drones))]
+
+print(px)
+for j in range(len(drones)):
+    drone_cur = drones[j]
+    for i in range(100):
+        drone_cur.calculate_velocity()
+        drone_cur.calculate_position()
+        drone_cur.update_t()
+        x, y, z, vx, vy, vz, t = drone_cur.x, drone_cur.y, drone_cur.z, drone_cur.vx, drone_cur.vy, drone_cur.vz, drone_cur.t
+        drone_cur = drone(x,y,z,vx,vy,vz,5 * np.random.randn(),5 * np.random.randn(),5 * np.random.randn(),t)
+        px[j].append(x)
+        py[j].append(y)
+        pz[j].append(z)
+        pt[j].append(t)
