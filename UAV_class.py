@@ -29,25 +29,26 @@ class drone():
     def update_t(self):
         self.t = self.t + self.dt
 
-# drone_1 = drone(0,0,0,0,0,0,5 * np.random.randn(),5 * np.random.randn(),5 * np.random.randn(),0)
-#
-# drones = [drone(0,0,0,0,0,0,5 * np.random.randn(),5 * np.random.randn(),5 * np.random.randn(),0) for k in range(5)]
+if __name__ == "__main__":
+    drone_1 = drone(0,0,0,0,0,0,5 * np.random.randn(),5 * np.random.randn(),5 * np.random.randn(),0)
 
-# px = [[] for k in range(len(drones))]
-# py = [[] for k in range(len(drones))]
-# pz = [[] for k in range(len(drones))]
-# pt = [[] for k in range(len(drones))]
+    drones = [drone(0,0,0,0,0,0,5 * np.random.randn(),5 * np.random.randn(),5 * np.random.randn(),0) for k in range(5)]
 
-# print(px)
-# for j in range(len(drones)):
-#     drone_cur = drones[j]
-#     for i in range(100):
-#         drone_cur.calculate_velocity()
-#         drone_cur.calculate_position()
-#         drone_cur.update_t()
-#         x, y, z, vx, vy, vz, t = drone_cur.x, drone_cur.y, drone_cur.z, drone_cur.vx, drone_cur.vy, drone_cur.vz, drone_cur.t
-#         drone_cur = drone(x,y,z,vx,vy,vz,5 * np.random.randn(),5 * np.random.randn(),5 * np.random.randn(),t)
-#         px[j].append(x)
-#         py[j].append(y)
-#         pz[j].append(z)
-#         pt[j].append(t)
+    px = [[] for k in range(len(drones))]
+    py = [[] for k in range(len(drones))]
+    pz = [[] for k in range(len(drones))]
+    pt = [[] for k in range(len(drones))]
+
+    print(px)
+    for j in range(len(drones)):
+        drone_cur = drones[j]
+        for i in range(100):
+            drone_cur.calculate_velocity()
+            drone_cur.calculate_position()
+            drone_cur.update_t()
+            x, y, z, vx, vy, vz, t = drone_cur.x, drone_cur.y, drone_cur.z, drone_cur.vx, drone_cur.vy, drone_cur.vz, drone_cur.t
+            drone_cur = drone(x,y,z,vx,vy,vz,5 * np.random.randn(),5 * np.random.randn(),5 * np.random.randn(),t)
+            px[j].append(x)
+            py[j].append(y)
+            pz[j].append(z)
+            pt[j].append(t)

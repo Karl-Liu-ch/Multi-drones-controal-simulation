@@ -7,17 +7,15 @@ from Obstacle_Class import Obstacle
 from mpl_toolkits.mplot3d import Axes3D
 
 fig = plt.figure(figsize=(50, 50))
-X=np.arange(0, 5, step=1)#X轴的坐标
-Y=np.arange(0, 9, step=1)#Y轴的坐标
-Z=np.zeros(shape=(5, 9))
-for i in range(5):
-    for j in range(9):
-        Z[i, j]=i+j
-xx, yy=np.meshgrid(X, Y)#网格化坐标
-X, Y=xx.ravel(), yy.ravel()#矩阵扁平化
-bottom=np.zeros_like(X)#设置柱状图的底端位值
-Z=Z.ravel()#扁平化矩阵
-width=height=0.1#每一个柱子的长和宽
+obs = []
+for i in range(40):
+    obs.append(Obstacle(2 + 2 * np.random.randn(), abs(2 + 2 * np.random.randn()), 0.1, 0.1, 3 * abs(np.random.randn())))
+X = np.array([ ob.x for ob in obs])
+Y = np.array([ ob.y for ob in obs])
+height = np.array([ ob.height for ob in obs])
+bottom=np.zeros_like(X)
+length=np.array([ ob.length for ob in obs])
+width=np.array([ ob.width for ob in obs])
 
 ax = p3.Axes3D(fig)
 
@@ -31,7 +29,7 @@ z=np.array(q[2])
 ax.legend()
 
 points, = ax.plot(x, y, z, 'o')
-ax.bar3d(X, Y, bottom, width, height, Z, shade=True)
+ax.bar3d(X, Y, bottom, length, width, height, shade=True)
 
 txt = fig.suptitle('')
 
