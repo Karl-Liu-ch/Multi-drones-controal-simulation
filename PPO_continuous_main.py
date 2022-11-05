@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 import argparse
 from normalization import Normalization, RewardScaling
 from replaybuffer import ReplayBuffer
@@ -64,7 +64,7 @@ def main(args, env, number, seed, num_obs, num_drone):
     print("agent built")
 
     # Build a tensorboard
-    writer = SummaryWriter(log_dir='runs/PPO_continuous/env_{}_{}_number_{}_seed_{}'.format(env_name, args.policy_dist, number, seed))
+    # writer = SummaryWriter(log_dir='runs/PPO_continuous/env_{}_{}_number_{}_seed_{}'.format(env_name, args.policy_dist, number, seed))
 
     state_norm = Normalization(shape=args.state_dim)  # Trick 2:state normalization
     if args.use_reward_norm:  # Trick 3:reward normalization
@@ -124,7 +124,7 @@ def main(args, env, number, seed, num_obs, num_drone):
                 evaluate_reward = evaluate_policy(args, env, agent, state_norm)
                 evaluate_rewards.append(evaluate_reward)
                 print("evaluate_num:{} \t evaluate_reward:{} \t".format(evaluate_num, evaluate_reward))
-                writer.add_scalar('step_rewards_{}'.format(env_name), evaluate_rewards[-1], global_step=total_steps)
+                # writer.add_scalar('step_rewards_{}'.format(env_name), evaluate_rewards[-1], global_step=total_steps)
                 # Save the rewards
                 if evaluate_num % args.save_freq == 0:
                     np.save('./data_train/PPO_continuous_{}_env_{}_number_{}_seed_{}.npy'.format(args.policy_dist, env_name, number, seed), np.array(evaluate_rewards))
