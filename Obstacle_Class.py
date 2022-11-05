@@ -14,8 +14,8 @@ if __name__ == "__main__":
     obs = []
     for i in range(50):
         obs.append(Obstacle(3 + 3 * np.random.randn(), 3 + 3 * np.random.randn(), 0.1, 0.1, abs(np.random.randn())))
-    fig = plt.figure(figsize=(50, 50))
-    ax = p3.Axes3D(fig)
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
     X = np.array([ ob.x for ob in obs])
     Y = np.array([ ob.y for ob in obs])
     height = np.array([ ob.height for ob in obs])
@@ -24,6 +24,5 @@ if __name__ == "__main__":
     length=np.array([ ob.length for ob in obs])
     width=np.array([ ob.width for ob in obs])#每一个柱子的长和宽
     #绘图设置
-    ax=fig.gca(projection='3d')#三维坐标轴
     ax.bar3d(X, Y, bottom, length, width, height, shade=True)#
     plt.show()
