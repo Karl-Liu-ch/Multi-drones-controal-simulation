@@ -3,7 +3,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-# from UAV_class import drone
 from Obstacle_Class import Obstacle
 
 class Environment():
@@ -11,22 +10,31 @@ class Environment():
         self.obs = [Obstacle(3 + 3 * np.random.randn(), 3 + 3 * np.random.randn(), 0.2, 0.2, 3 * abs(np.random.randn())) for i in range(num_obs)]
         self.drones = [drone() for k in range(num_drones)]
         self.obstate = self.get_obs_state()
+        self.start_point = self.set_start()
+    
+    def calDistance(self, x, y):
+        return np.linalg.norm(x - y)
     
     def collsion(self):
+        reward = 0
         for drone in self.drones:
             for ob in self.obs:
-                if drone.position[0] > ob.x and drone.position[0] < ob.x + ob.length and drone.position[1] > ob.y and drone.position[1] < ob.y + ob.width:
-                    print('collided with obstacle')
-                    return True
+                d = self.calDistance(drone.position[0:2], np.array([ob.x + ob.length * 0.5, ob.y + ob.width * 0.5]))
+                d_threshold = 0.2 + ob.length
+                if d < d_threshold:
+                    # print("crash")
+                    reward = reward - 10 * d_threshold / d
+                    return reward
         for i in range(len(self.drones)):
             for j in range(len(self.drones)):
                 if i != j:
-                    d = self.drones[i].position - self.drones[j].position
-                    d = np.linalg.norm(d)
-                    if d < 0.1:
-                        print('collided with drone')
-                        return True
-        return False
+                    d = self.calDistance(self.drones[i].position, self.drones[j].position)
+                    d_threshold = 0.4
+                    if d < d_threshold:
+                        # print("crash")
+                        reward = reward - 10 * d_threshold / d
+                    return reward
+        return 0
     
     def get_obs_state(self):
         state = []
@@ -38,10 +46,17 @@ class Environment():
     
     def set_start(self):
         k = 0.0
+        start_point = np.array([])
         for drone in self.drones:
             drone.set_start(np.array([k, 0.0, 0.0]))
+            start_point = np.append(start_point, np.array([k, 0.0, 0.0]))
             k = k + 1.0
-    
+        return start_point
+
+    def reset_t(self):
+        for drone in self.drones:
+            drone.t = 0.0
+
     def set_end(self):
         k = 0.0
         for drone in self.drones:
@@ -63,6 +78,7 @@ class Environment():
         self.set_va()
         self.set_start()
         self.set_end()
+        self.reset_t()
         state = self.get_state()
         state = np.append(state, self.obstate)
         return state
@@ -74,9 +90,10 @@ class Environment():
         for i in range(len(self.drones)):
             a = action[i]
             done, d = self.drones[i].end_direction()
+            d_start = self.calDistance(d, self.start_point[i])
             if done:
                 self.drones[i].set_va()
-                reward = reward - d - self.drones[i].t
+                reward = reward - d / (d_start + 1.0) - self.drones[i].t / 10.0 + self.collsion() * 1e2
                 # reward = reward - d + 10.0 / (d + 1.0) - self.drones[i].t + 10.0 / (self.drones[i].t + 1.0)
                 state.append(self.drones[i].get_state())
             else:
@@ -84,7 +101,7 @@ class Environment():
                 self.drones[i].calculate_velocity()
                 self.drones[i].calculate_position()
                 self.drones[i].update_t()
-                reward = reward - d - self.drones[i].t
+                reward = reward - d / (d_start + 1.0) - self.drones[i].t / 10.0 + self.collsion() * 1e2
                 # reward = reward - d + 10.0 / (d + 1.0) - self.drones[i].t + 10.0 / (self.drones[i].t + 1.0)
                 state.append(self.drones[i].get_state())
             dones.append(done)
@@ -92,10 +109,6 @@ class Environment():
         state = np.append(state, self.obstate)
         if all(dones) == True:
             Done = True
-        elif self.collsion() == True:
-            Done = True
-            print('Collision. Failed')
-            reward = -1e9
         else:
             Done = False
         return state, reward, Done
@@ -167,7 +180,7 @@ class drone():
     def end_direction(self):
         d = self.end - self.position
         # if np.linalg.norm(d) < 1e-2:
-        if np.linalg.norm(d) < 1e-2 or self.t > 100:
+        if np.linalg.norm(d) < 1e-2 or self.t > 10:
             return True, np.linalg.norm(d)
         else:
             return False, np.linalg.norm(d)

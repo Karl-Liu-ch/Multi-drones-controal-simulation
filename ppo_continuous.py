@@ -54,11 +54,7 @@ class Actor_Gaussian(nn.Module):
         super(Actor_Gaussian, self).__init__()
         self.max_action = args.max_action
         self.fc1 = nn.Linear(args.state_dim, args.hidden_width)
-        self.fc2 = nn.Sequential(
-            nn.Linear(args.hidden_width, args.hidden_width * 2),
-            nn.Linear(args.hidden_width * 2, args.hidden_width * 2),
-            nn.Linear(args.hidden_width * 2, args.hidden_width)
-        )
+        self.fc2 = nn.Linear(args.hidden_width, args.hidden_width)
         self.mean_layer = nn.Linear(args.hidden_width, args.action_dim)
         self.log_std = nn.Parameter(torch.zeros(1, args.action_dim).to(device))  # We use 'nn.Parameter' to train log_std automatically
         self.activate_func = [nn.ReLU(), nn.Tanh()][args.use_tanh]  # Trick10: use tanh
@@ -66,7 +62,7 @@ class Actor_Gaussian(nn.Module):
         if args.use_orthogonal_init:
             print("------use_orthogonal_init------")
             orthogonal_init(self.fc1)
-            # orthogonal_init(self.fc2)
+            orthogonal_init(self.fc2)
             orthogonal_init(self.mean_layer, gain=0.01)
 
     def forward(self, s):
@@ -87,17 +83,14 @@ class Critic(nn.Module):
     def __init__(self, args):
         super(Critic, self).__init__()
         self.fc1 = nn.Linear(args.state_dim, args.hidden_width)
-        self.fc2 = nn.Sequential(
-            nn.Linear(args.hidden_width, args.hidden_width),
-            nn.Linear(args.hidden_width, args.hidden_width)
-        )
+        self.fc2 = nn.Linear(args.hidden_width, args.hidden_width)
         self.fc3 = nn.Linear(args.hidden_width, 1)
         self.activate_func = [nn.ReLU(), nn.Tanh()][args.use_tanh]  # Trick10: use tanh
 
         if args.use_orthogonal_init:
             print("------use_orthogonal_init------")
             orthogonal_init(self.fc1)
-            # orthogonal_init(self.fc2)
+            orthogonal_init(self.fc2)
             orthogonal_init(self.fc3)
 
     def forward(self, s):

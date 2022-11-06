@@ -6,12 +6,21 @@ from normalization import Normalization, RewardScaling
 from replaybuffer import ReplayBuffer
 from ppo_continuous import PPO_continuous
 from DRL_path_planner import drone, Environment
+from visualization import visualization
 
-def evaluate_policy(args, env, agent, state_norm):
+def evaluate_policy(args, env, agent, state_norm, vis = False):
+    pt = []
+    px = []
+    py = []
+    pz = []
     times = 3
     evaluate_reward = 0
     for _ in range(times):
         s = env.reset()
+        pt.append([env.drones[k].t for k in range(len(env.drones))])
+        px.append([env.drones[k].position[0] for k in range(len(env.drones))])
+        py.append([env.drones[k].position[1] for k in range(len(env.drones))])
+        pz.append([env.drones[k].position[2] for k in range(len(env.drones))])
         if args.use_state_norm:
             s = state_norm(s, update=False)  # During the evaluating,update=False
         done = False
@@ -24,13 +33,20 @@ def evaluate_policy(args, env, agent, state_norm):
                 action = a
             action = np.reshape(action, (-1, 3))
             s_, r, done = env.step(action)
+            pt.append([env.drones[k].t for k in range(len(env.drones))])
+            px.append([env.drones[k].position[0] for k in range(len(env.drones))])
+            py.append([env.drones[k].position[1] for k in range(len(env.drones))])
+            pz.append([env.drones[k].position[2] for k in range(len(env.drones))])
             if args.use_state_norm:
                 s_ = state_norm(s_, update=False)
             episode_reward += r
             s = s_
+            if done:
+                for drone in env.drones:
+                    print(np.linalg.norm(drone.position - drone.end))
+                if vis == True:
+                    visualization(env.obs, pt, px, py, pz)
         evaluate_reward += episode_reward
-    for drone in env.drones:
-        print(drone.distance())
     return evaluate_reward / times
 
 
@@ -100,9 +116,9 @@ def main(args, env, number, seed, num_obs, num_drone):
             # When dead or win or reaching the max_episode_steps, done will be Ture, we need to distinguish them;
             # dw means dead or win,there is no next state s';
             # but when reaching the max_episode_steps,there is a next state s' actually.
-            if episode_steps == args.max_episode_steps:
-                done = True
-                print('max_episode')
+            # if episode_steps == args.max_episode_steps:
+            #     done = True
+            #     print('max_episode')
             if done and episode_steps != args.max_episode_steps:
                 dw = True
             else:
@@ -121,7 +137,7 @@ def main(args, env, number, seed, num_obs, num_drone):
             # Evaluate the policy every 'evaluate_freq' steps
             if total_steps % args.evaluate_freq == 0:
                 evaluate_num += 1
-                evaluate_reward = evaluate_policy(args, env, agent, state_norm)
+                evaluate_reward = evaluate_policy(args, env, agent, state_norm, evaluate_num // 100 == 0)
                 evaluate_rewards.append(evaluate_reward)
                 print("evaluate_num:{} \t evaluate_reward:{} \t".format(evaluate_num, evaluate_reward))
                 # writer.add_scalar('step_rewards_{}'.format(env_name), evaluate_rewards[-1], global_step=total_steps)
