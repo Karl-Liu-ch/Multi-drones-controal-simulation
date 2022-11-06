@@ -5,7 +5,7 @@ import argparse
 from normalization import Normalization, RewardScaling
 from replaybuffer import ReplayBuffer
 from ppo_continuous import PPO_continuous
-from DRL_path_planner import drone, Environment
+from UAV_alpha_class import drone, Environment
 from visualization import visualization
 
 def evaluate_policy(args, env, agent, state_norm, vis = False):
@@ -31,7 +31,7 @@ def evaluate_policy(args, env, agent, state_norm, vis = False):
                 action = 2 * (a - 0.5) * args.max_action  # [0,1]->[-max,max]
             else:
                 action = a
-            action = np.reshape(action, (-1, 3))
+            action = np.reshape(action, (-1, 2))
             s_, r, done = env.step(action)
             pt.append([env.drones[k].t for k in range(len(env.drones))])
             px.append([env.drones[k].position[0] for k in range(len(env.drones))])
@@ -61,8 +61,8 @@ def main(args, env, number, seed, num_obs, num_drone):
     torch.manual_seed(seed)
     env_name = 'drone'
 
-    args.state_dim = 13 * num_drone + 3 * num_obs
-    args.action_dim = 3 * num_drone
+    args.state_dim = 12 * num_drone + 3 * num_obs
+    args.action_dim = 2 * num_drone
     args.max_action = 1000
     args.max_episode_steps = 100  # Maximum number of steps per episode
     print("env={}".format(env_name))
@@ -103,7 +103,7 @@ def main(args, env, number, seed, num_obs, num_drone):
                 action = 2 * (a - 0.5) * args.max_action  # [0,1]->[-max,max]
             else:
                 action = a
-            action = np.reshape(action, (-1, 3))
+            action = np.reshape(action, (-1, 2))
             s_, r, done = env.step(action)
 
             if args.use_state_norm:
