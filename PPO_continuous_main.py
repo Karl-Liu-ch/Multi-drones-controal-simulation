@@ -137,7 +137,7 @@ def main(args, env, number, seed, num_obs, num_drone):
             # Evaluate the policy every 'evaluate_freq' steps
             if total_steps % args.evaluate_freq == 0:
                 evaluate_num += 1
-                evaluate_reward = evaluate_policy(args, env, agent, state_norm, evaluate_num // 1000 == 0)
+                evaluate_reward = evaluate_policy(args, env, agent, state_norm, (evaluate_num % 1000) == 0)
                 evaluate_rewards.append(evaluate_reward)
                 print("evaluate_num:{} \t evaluate_reward:{} \t".format(evaluate_num, evaluate_reward))
                 # writer.add_scalar('step_rewards_{}'.format(env_name), evaluate_rewards[-1], global_step=total_steps)
