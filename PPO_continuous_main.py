@@ -63,7 +63,7 @@ def main(args, env, number, seed, num_obs, num_drone):
 
     args.state_dim = 12 * num_drone + 3 * num_obs
     args.action_dim = 2 * num_drone
-    args.max_action = 1000
+    args.max_action = 10 / 180 * np.pi
     args.max_episode_steps = 100  # Maximum number of steps per episode
     print("env={}".format(env_name))
     print("state_dim={}".format(args.state_dim))
