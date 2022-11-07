@@ -4,10 +4,7 @@ from matplotlib import animation
 from Obstacle_Class import Obstacle
 import random
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 39a1cd2201285b729a8e1fbbcdad92968ff5903f
+'''
 class drone():
     def __init__(self, x, y, z, vx, vy, vz, ax, ay, az, t, obstacle, end_x, end_y, end_z):
         self.x = x
@@ -196,7 +193,6 @@ class drone():
             if self.avoiding == False:
                 self.a = new_V - self.v
                 # print(self.v)
-'''
 
 if __name__ == "__main__":
     # define random obstacles
