@@ -103,11 +103,8 @@ class drone():
         self.position = np.array([0,0,0])
         self.start_point = np.array([0,0,0])
         self.V = 1.0
-<<<<<<< HEAD
         self.alpha = 0.5 * np.pi
-=======
         self.alpha = 0
->>>>>>> 39a1cd2201285b729a8e1fbbcdad92968ff5903f
         self.phi = 0
         v = np.array([self.V * np.cos(self.phi) * np.cos(self.alpha), self.V * np.cos(self.phi) * np.sin(self.alpha), self.V * np.sin(self.phi)])
         self.v = v / np.linalg.norm(v) * self.V
@@ -215,13 +212,8 @@ if __name__ == "__main__":
 
     for j in range(len(drones)):
         drone_cur = drones[j]
-<<<<<<< HEAD
         for i in range(100):
             drone_cur.update_state(np.random.randn() * 2 / 180 * np.pi, np.random.randn() * 2 / 180 * np.pi)
-=======
-        for i in range(1000):
-            drone_cur.update_state(np.random.randn() * 10 / 180 * np.pi, np.random.randn() * 10 / 180 * np.pi)
->>>>>>> 39a1cd2201285b729a8e1fbbcdad92968ff5903f
             [x, y, z], t= drone_cur.position, drone_cur.t
             px[j].append(x)
             py[j].append(y)
