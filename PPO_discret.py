@@ -62,7 +62,7 @@ try:
         for j in range(rollout_limit):
             # generate rollout by iteratively evaluating the current policy on the environment
             with torch.no_grad():
-                a_prob = policy(torch.from_numpy(np.atleast_2d(s)).float())
+                a_prob = policy(torch.from_numpy(np.atleast_2d(s)).float().to(device))
                 a = torch.multinomial(a_prob, num_samples=1).squeeze().cpu().numpy()
             s1, r, done, _ = env.step(a)
             rollout.append((s, a, r))
@@ -76,8 +76,8 @@ try:
         returns = compute_returns(rewards, discount_factor)
         # policy gradient update
         policy.optimizer.zero_grad()
-        a_probs = policy(torch.from_numpy(states).float()).gather(1, torch.from_numpy(actions)).view(-1)
-        loss = policy.loss(a_probs, torch.from_numpy(returns).float())
+        a_probs = policy(torch.from_numpy(states).float().to(device)).gather(1, torch.from_numpy(actions).to(device)).view(-1)
+        loss = policy.loss(a_probs, torch.from_numpy(returns).float().to(device))
         loss.backward()
         policy.optimizer.step()
         # bookkeeping
@@ -92,7 +92,7 @@ try:
                 reward = 0
                 for _ in range(rollout_limit):
                     with torch.no_grad():
-                        a_prob = policy(torch.from_numpy(np.atleast_2d(s)).float())
+                        a_prob = policy(torch.from_numpy(np.atleast_2d(s)).float().to(device))
                         a = a_prob.argmax().item()
                     s, r, done, _ = env.step(a)
                     reward += r
