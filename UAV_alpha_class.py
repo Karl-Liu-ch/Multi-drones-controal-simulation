@@ -86,7 +86,7 @@ class Environment():
         for i in range(len(self.drones)):
             a = action[i]
             state, reward, done = self.drones[i].step(a)
-            reward = reward + self.collsion() * 1e2
+            reward = reward + self.collsion()
             # reward = reward - d + 10.0 / (d + 1.0) - self.drones[i].t + 10.0 / (self.drones[i].t + 1.0)
             states.append(state)
             dones.append(done)
