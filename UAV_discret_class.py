@@ -57,7 +57,7 @@ class drone():
         self.next_position(action)
         self.t = self.t + self.dt
         state = np.append(self.position, np.append(self.end, self.t))
-        reward = - (self.cal_distance(self.position, self.end)) / self.cal_distance(self.end, self.start) - self.t
+        reward = - (self.cal_distance(self.position, self.end)) / self.cal_distance(self.end, self.start) - self.t / 50.0
         # print(self.cal_distance(self.position, self.end))
         if self.cal_distance(self.position, self.end) == 0:
             done = True

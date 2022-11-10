@@ -25,7 +25,9 @@ def evaluate_policy(args, env, agent, state_norm, vis = False):
             s = state_norm(s, update=False)  # During the evaluating,update=False
         done = False
         episode_reward = 0
-        while not done:
+        episode_steps = 0
+        while episode_steps < args.max_episode_steps:
+            episode_steps += 1
             a = agent.evaluate(s)  # We use the deterministic policy during the evaluating
             if args.policy_dist == "Beta":
                 action = 2 * (a - 0.5) * args.max_action  # [0,1]->[-max,max]
@@ -46,6 +48,7 @@ def evaluate_policy(args, env, agent, state_norm, vis = False):
                     print(np.linalg.norm(drone.position - drone.end))
                 if vis == True:
                     visualization(env.obs, pt, px, py, pz)
+            if done: break
         evaluate_reward += episode_reward
     return evaluate_reward / times
 
@@ -61,10 +64,10 @@ def main(args, env, number, seed, num_obs, num_drone):
     torch.manual_seed(seed)
     env_name = 'drone'
 
-    args.state_dim = 12 * num_drone + 3 * num_obs
+    args.state_dim = 9 * num_drone + 3 * num_obs
     args.action_dim = 2 * num_drone
     args.max_action = 10 / 180 * np.pi
-    args.max_episode_steps = 100  # Maximum number of steps per episode
+    args.max_episode_steps = 1000  # Maximum number of steps per episode
     print("env={}".format(env_name))
     print("state_dim={}".format(args.state_dim))
     print("action_dim={}".format(args.action_dim))
@@ -96,7 +99,7 @@ def main(args, env, number, seed, num_obs, num_drone):
             reward_scaling.reset()
         episode_steps = 0
         done = False
-        while not done:
+        while episode_steps < args.max_episode_steps:
             episode_steps += 1
             a, a_logprob = agent.choose_action(s)  # Action and the corresponding log probability
             if args.policy_dist == "Beta":
@@ -116,9 +119,6 @@ def main(args, env, number, seed, num_obs, num_drone):
             # When dead or win or reaching the max_episode_steps, done will be Ture, we need to distinguish them;
             # dw means dead or win,there is no next state s';
             # but when reaching the max_episode_steps,there is a next state s' actually.
-            # if episode_steps == args.max_episode_steps:
-            #     done = True
-            #     print('max_episode')
             if done and episode_steps != args.max_episode_steps:
                 dw = True
             else:
@@ -144,7 +144,8 @@ def main(args, env, number, seed, num_obs, num_drone):
                 # Save the rewards
                 if evaluate_num % args.save_freq == 0:
                     np.save('./data_train/PPO_continuous_{}_env_{}_number_{}_seed_{}.npy'.format(args.policy_dist, env_name, number, seed), np.array(evaluate_rewards))
-
+            if done:
+                break
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Hyperparameters Setting for PPO-continuous")

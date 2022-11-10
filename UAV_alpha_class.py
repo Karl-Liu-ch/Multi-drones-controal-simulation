@@ -23,7 +23,7 @@ class Environment():
                 d_threshold = 0.2 + ob.length
                 if d < d_threshold:
                     # print("crash")
-                    reward = reward - 10 * d_threshold / d
+                    reward = reward - d_threshold / d
                     return reward
         for i in range(len(self.drones)):
             for j in range(len(self.drones)):
@@ -32,7 +32,7 @@ class Environment():
                     d_threshold = 0.4
                     if d < d_threshold:
                         # print("crash")
-                        reward = reward - 10 * d_threshold / d
+                        reward = reward - d_threshold / d
                     return reward
         return 0
     
@@ -88,7 +88,7 @@ class Environment():
             state, reward, done = self.drones[i].step(a)
             reward = reward + self.collsion() * 1e2
             # reward = reward - d + 10.0 / (d + 1.0) - self.drones[i].t + 10.0 / (self.drones[i].t + 1.0)
-            states.append(self.drones[i].get_state())
+            states.append(state)
             dones.append(done)
         states = np.array(states).flatten()
         states = np.append(states, self.obstate)
@@ -128,8 +128,8 @@ class drone():
         self.v = self.v / np.linalg.norm(self.v) * self.V
 
     def get_state(self):
-        state = np.append(self.position, np.append(self.v, np.append(self.alpha, np.append(self.phi, self.end))))
-        state = np.insert(state, 11, self.t)
+        state = np.append(self.end - self.position, np.append(self.v, np.append(self.alpha, self.phi)))
+        state = np.insert(state, 8, self.t)
         return state
         
     def update_state(self, d_alpha, d_phi):
@@ -151,25 +151,26 @@ class drone():
     def step(self, action):
         done, d = self.end_direction()
         if done:
+            print("finished")
             self.v = np.array([0,0,0])
             self.V = 0
             d_start = self.distance(self.position, self.start_point)
-            reward = - d / (d_start + 1.0) - self.t / 10.0 
-            state = np.append(self.position, np.append(self.v, np.append(self.alpha, np.append(self.phi, self.end))))
-            state = np.insert(state, 11, self.t)
+            reward = - d / (d_start) + 30
+            state = np.append(self.end - self.position, np.append(self.v, np.append(self.alpha, self.phi)))
+            state = np.insert(state, 8, self.t)
             return state, reward, done
         else:
             self.update_state(action[0], action[1])
             d_start = self.distance(self.position, self.start_point)
-            reward = - d / (d_start + 1.0) - self.t / 10.0 
-            state = np.append(self.position, np.append(self.v, np.append(self.alpha, np.append(self.phi, self.end))))
-            state = np.insert(state, 11, self.t)
+            reward = - d / (d_start)
+            state = np.append(self.end - self.position, np.append(self.v, np.append(self.alpha, self.phi)))
+            state = np.insert(state, 8, self.t)
         return state, reward, done
         
     def end_direction(self):
         d = self.end - self.position
         # if np.linalg.norm(d) < 1e-2:
-        if np.linalg.norm(d) < 1e-2 or self.t > 10:
+        if np.linalg.norm(d) < 1e-2:
             return True, np.linalg.norm(d)
         else:
             return False, np.linalg.norm(d)
@@ -185,8 +186,8 @@ class drone():
         self.phi = 0.0
         v = np.array([self.V * np.cos(self.phi) * np.cos(self.alpha), self.V * np.cos(self.phi) * np.sin(self.alpha), self.V * np.sin(self.phi)])
         self.v = v / np.linalg.norm(v) * self.V
-        state = np.append(self.position, np.append(self.v, np.append(self.alpha, np.append(self.phi, self.end))))
-        state = np.insert(state, 11, self.t)
+        state = np.append(self.end - self.position, np.append(self.v, np.append(self.alpha, self.phi)))
+        state = np.insert(state, 8, self.t)
         return state
 
 if __name__ == "__main__":
