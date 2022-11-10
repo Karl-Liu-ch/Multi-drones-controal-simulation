@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from core import *
+from DRL.core import *
 from torch.utils.tensorboard import SummaryWriter
 
 class AgentPPO:

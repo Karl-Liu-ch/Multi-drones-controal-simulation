@@ -5,10 +5,10 @@
 # Name: Dynamic obstacle avoidance with PPO
 # File func: main func
 import torch
-from PPOModel import *
+from DRL.PPOModel import *
 import matplotlib.pyplot as plt
 import random
-from config import Config
+from DRL.config import Config
 import os
 from time import time
 from UAV_alpha_class import drone, Environment
