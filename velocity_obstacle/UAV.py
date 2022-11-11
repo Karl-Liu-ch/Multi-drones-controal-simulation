@@ -79,7 +79,6 @@ class UAV:
 
     def check_constraints(self, v_sample, Amat, bvec):
         length = np.shape(bvec)[0]
-
         for i in range(int(length/2)):
             v_sample = self.check_inside(v_sample, Amat[2*i:2*i+2, :], bvec[2*i:2*i+2])
 
@@ -91,7 +90,6 @@ class UAV:
             if not ((Amat @ v[:, i] < bvec).all()):
                 v_out.append(v[:, i])
         return np.array(v_out).T
-
 
     def create_constraints(self, translation, angle, side):
         # create line
@@ -117,6 +115,8 @@ class UAV:
         new_state = np.empty((4))
         new_state[:2] = x[:2] + v * self.TIMESTEP
         new_state[-2:] = v
+        self.position = new_state[:2]
+        self.velocity = v
         return new_state
 
 class Obstacle:

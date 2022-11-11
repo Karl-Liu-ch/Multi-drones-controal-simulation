@@ -28,13 +28,17 @@ def create_obstacles(sim_time, num_timesteps):
 
     return obstacles
 
-
 def create_robot(p0, v, theta, sim_time, num_timesteps):
     # Creates obstacles starting at p0 and moving at v in theta direction
     t = np.linspace(0, sim_time, num_timesteps)
     theta = theta * np.ones(np.shape(t))
-    vx = v * np.cos(theta)
-    vy = v * np.sin(theta)
+    vx = np.zeros_like(theta)
+    vy = np.zeros_like(theta)
+    for i in range(50):
+        vx[i] = v * (np.cos(theta[i]) + 0.8 * np.random.randn())
+        vy[i] = v * (np.sin(theta[i]) + 0.8 * np.random.randn())
+    # vx = v * np.cos(theta)
+    # vy = v * np.sin(theta)
     v = np.stack([vx, vy])
     p0 = p0.reshape((2, 1))
     p = p0 + np.cumsum(v, axis=1) * (sim_time / num_timesteps)
