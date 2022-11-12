@@ -1,9 +1,9 @@
 import numpy as np
 from multi_robot_plot import plot_robot_and_obstacles
-from creat_obstacles import create_obstacles
+from creat_UAVs import create_obstacles
 import argparse
-SIM_TIME = 5.0
-NUMBER_OF_TIMESTEPS = int(5.0 / 0.1)
+SIM_TIME = 10.0
+NUMBER_OF_TIMESTEPS = int(10.0 / 0.1)
 
 class UAV:
     def __init__(self, position: np.array, velocity: np.array, goal: np.array, robot_radius: float, vmax: float):
@@ -119,29 +119,44 @@ class UAV:
         self.velocity = v
         return new_state
 
-class Obstacle:
-    def __init__(self, position: np.array, velocity: np.array):
-        self.position = position
-        self.velocity = velocity
-
 def simulate(filename):
     obstacles = create_obstacles(SIM_TIME, NUMBER_OF_TIMESTEPS)
 
-    start = np.array([5, 0])
-    start_velocity = np.array([0,0])
-    goal = np.array([5, 10])
-    robot = UAV(start, start_velocity, goal, 0.5, 2.0)
+    start_1 = np.array([6, 0])
+    start_velocity_1 = np.array([0,0])
+    goal_1 = np.array([3, 10])
+    robot_1 = UAV(start_1, start_velocity_1, goal_1, 0.5, 2.0)
+    robot_state_1 = np.append(start_1, start_velocity_1)
+    robot_state_history_1 = np.empty((4, NUMBER_OF_TIMESTEPS))
 
-    robot_state = np.append(start, start_velocity)
-    robot_state_history = np.empty((4, NUMBER_OF_TIMESTEPS))
+    start_2 = np.array([3, 0])
+    start_velocity_2 = np.array([0, 0])
+    goal_2 = np.array([6, 10])
+    robot_2 = UAV(start_2, start_velocity_2, goal_2, 0.5, 2.0)
+    robot_state_2 = np.append(start_2, start_velocity_2)
+    robot_state_history_2 = np.empty((4, NUMBER_OF_TIMESTEPS))
+
     for i in range(NUMBER_OF_TIMESTEPS):
-        v_desired = robot.compute_desired_velocity()
-        control_vel = robot.compute_velocity(obstacles[:, i, :], v_desired)
-        robot_state = robot.update_state(robot_state, control_vel)
-        robot_state_history[:4, i] = robot_state
+        v_desired = robot_1.compute_desired_velocity()
+        control_vel = robot_1.compute_velocity(
+            np.concatenate((obstacles[:, i, :], np.reshape(robot_state_2, (4,1))), axis=1), v_desired)
+        # control_vel = robot_1.compute_velocity(obstacles[:, i, :], v_desired)
+        robot_state_1 = robot_1.update_state(robot_state_1, control_vel)
+        robot_state_history_1[:4, i] = robot_state_1
 
+        v_desired = robot_2.compute_desired_velocity()
+        control_vel = robot_2.compute_velocity(
+            np.concatenate((obstacles[:, i, :], np.reshape(robot_state_1, (4, 1))), axis=1), v_desired)
+        # control_vel = robot_1.compute_velocity(obstacles[:, i, :], v_desired)
+        robot_state_2 = robot_2.update_state(robot_state_2, control_vel)
+        robot_state_history_2[:4, i] = robot_state_2
+        obstacles = np.dstack((obstacles, robot_state_history_2))
+
+        robot_state_history = np.concatenate((robot_state_history_1, robot_state_history_2), axis=1)
     plot_robot_and_obstacles(
-        robot_state_history, obstacles, robot.robot_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, filename)
+        robot_state_history_1, obstacles, robot_1.robot_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, filename)
+    # plot_robot_and_obstacles(
+    #     robot_state_history_2, obstacles, robot_2.robot_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, filename)
 
 
 if __name__ == '__main__':
