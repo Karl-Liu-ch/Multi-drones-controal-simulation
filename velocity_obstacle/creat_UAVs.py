@@ -10,13 +10,22 @@ def create_obstacles(sim_time, num_timesteps):
     obst = create_robot(obstacle.position, obstacle.velocity, sim_time, num_timesteps).reshape(4, num_timesteps, 1)
     obstacles = obst
 
-    obstacle = Obstacle(np.array([5, 5]), np.array([0.2, 0.6]))
+    obstacle = Obstacle(np.array([5+np.random.randn(), 5+np.random.randn()]), np.array([0.2, 0.6]))
     obst = create_robot(obstacle.position, obstacle.velocity, sim_time, num_timesteps).reshape(4, num_timesteps, 1)
     obstacles = np.dstack((obstacles, obst))
 
-    obstacle = Obstacle(np.array([6, 6]), np.array([0, 0]))
+    obstacle = Obstacle(np.array([4, 5]), np.array([0.2, 0.6]))
     obst = create_robot(obstacle.position, obstacle.velocity, sim_time, num_timesteps).reshape(4, num_timesteps, 1)
     obstacles = np.dstack((obstacles, obst))
+
+    obstacle = Obstacle(np.array([5, 6]), np.array([0, 0]))
+    obst = create_robot(obstacle.position, obstacle.velocity, sim_time, num_timesteps).reshape(4, num_timesteps, 1)
+    obstacles = np.dstack((obstacles, obst))
+
+    obstacle = Obstacle(np.array([7, 3]), np.array([0, 0]))
+    obst = create_robot(obstacle.position, obstacle.velocity, sim_time, num_timesteps).reshape(4, num_timesteps, 1)
+    obstacles = np.dstack((obstacles, obst))
+
     return obstacles
 
 def create_robot(p0, v, sim_time, num_timesteps):

@@ -1,18 +1,11 @@
-"""
-Plotting tool for 2D multi-robot system
-
-author: Ashwin Bose (@atb033)
-"""
-
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.patches import Circle
 import numpy as np
 
-
 def plot_robot_and_obstacles(robot, obstacles, robot_radius, num_steps, sim_time, filename):
     fig = plt.figure()
-    ax = fig.add_subplot(111, autoscale_on=False, xlim=(0, 10), ylim=(0, 10))
+    ax = fig.add_subplot(111, autoscale_on=False, xlim=(0, 20), ylim=(0, 20))
     ax.set_aspect('equal')
     ax.grid()
     line, = ax.plot([], [], '--r')

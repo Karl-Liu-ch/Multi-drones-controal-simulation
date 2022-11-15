@@ -2,8 +2,10 @@ import numpy as np
 from multi_robot_plot import plot_robot_and_obstacles
 from creat_UAVs import create_obstacles
 import argparse
-SIM_TIME = 10.0
-NUMBER_OF_TIMESTEPS = int(10.0 / 0.1)
+SIM_TIME = 20.0
+NUMBER_OF_TIMESTEPS = int(20.0 / 0.1)
+DETECT_NOISE = 0.01
+update_frequency = 2
 
 class UAV:
     def __init__(self, position: np.array, velocity: np.array, goal: np.array, robot_radius: float, vmax: float):
@@ -13,6 +15,7 @@ class UAV:
         self.robot_radius = robot_radius
         self.vmax = vmax
         self.TIMESTEP = 0.1
+        self.path_length = 0.0
     
     def compute_desired_velocity(self):
         disp_vec = (self.goal - self.position)
@@ -64,7 +67,6 @@ class UAV:
         vy_sample = (vv * np.sin(thth)).flatten()
 
         v_sample = np.stack((vx_sample, vy_sample))
-
         v_satisfying_constraints = self.check_constraints(v_sample, Amat, bvec)
 
         # Objective function
@@ -74,7 +76,6 @@ class UAV:
         norm = np.linalg.norm(diffs, axis=0)
         min_index = np.where(norm == np.amin(norm))[0][0]
         cmd_vel = (v_satisfying_constraints[:, min_index])
-
         return cmd_vel
 
     def check_constraints(self, v_sample, Amat, bvec):
@@ -115,7 +116,9 @@ class UAV:
         new_state = np.empty((4))
         new_state[:2] = x[:2] + v * self.TIMESTEP
         new_state[-2:] = v
+        old_position = self.position
         self.position = new_state[:2]
+        self.path_length += np.linalg.norm(self.position - old_position)
         self.velocity = v
         return new_state
 
@@ -137,27 +140,47 @@ def simulate(filename):
     robot_state_history_2 = np.empty((4, NUMBER_OF_TIMESTEPS))
 
     for i in range(NUMBER_OF_TIMESTEPS):
-        v_desired = robot_1.compute_desired_velocity()
-        control_vel = robot_1.compute_velocity(
-            np.concatenate((obstacles[:, i, :], np.reshape(robot_state_2, (4,1))), axis=1), v_desired)
-        # control_vel = robot_1.compute_velocity(obstacles[:, i, :], v_desired)
+        # Update frequency parameter
+        if i % update_frequency == 0:
+            v_desired = robot_1.compute_desired_velocity()
+            try:
+                # here I added noise of detection of all obstacles and all other drones
+                input_robot_state2 = np.reshape(robot_state_2, (4, 1))
+                input_robot_state2 = DETECT_NOISE * np.random.normal(size=input_robot_state2.shape) + input_robot_state2
+                obstate = obstacles[:, i, :] + DETECT_NOISE * np.random.normal(size=obstacles[:, i, :].shape)
+                control_vel = robot_1.compute_velocity(
+                    np.concatenate((obstate,input_robot_state2), axis=1),v_desired)
+            except:
+                # if drone cannot find a path, then return task failed.
+                print("Failed to find a path")
+                break
+        else:
+            control_vel = robot_1.velocity
         robot_state_1 = robot_1.update_state(robot_state_1, control_vel)
         robot_state_history_1[:4, i] = robot_state_1
 
         v_desired = robot_2.compute_desired_velocity()
-        control_vel = robot_2.compute_velocity(
-            np.concatenate((obstacles[:, i, :], np.reshape(robot_state_1, (4, 1))), axis=1), v_desired)
-        # control_vel = robot_1.compute_velocity(obstacles[:, i, :], v_desired)
+        if i % update_frequency == 0:
+            try:
+                input_robot_state1 = np.reshape(robot_state_1, (4, 1))
+                input_robot_state1 = DETECT_NOISE * np.random.normal(size=input_robot_state1.shape) + input_robot_state1
+                obstate = obstacles[:, i, :] + DETECT_NOISE * np.random.normal(size=obstacles[:, i, :].shape)
+                control_vel = robot_2.compute_velocity(
+                    np.concatenate((obstate, input_robot_state1), axis=1), v_desired)
+            except:
+                print("Failed to find a path")
+                break
+        else:
+            control_vel = robot_2.velocity
         robot_state_2 = robot_2.update_state(robot_state_2, control_vel)
         robot_state_history_2[:4, i] = robot_state_2
-        obstacles = np.dstack((obstacles, robot_state_history_2))
 
+        obstacles = np.dstack((obstacles, robot_state_history_2))
         robot_state_history = np.concatenate((robot_state_history_1, robot_state_history_2), axis=1)
+    # we can judge the performance of drones by how long they traveled to reach the end position
+    print(robot_1.path_length, robot_2.path_length)
     plot_robot_and_obstacles(
         robot_state_history_1, obstacles, robot_1.robot_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, filename)
-    # plot_robot_and_obstacles(
-    #     robot_state_history_2, obstacles, robot_2.robot_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, filename)
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
