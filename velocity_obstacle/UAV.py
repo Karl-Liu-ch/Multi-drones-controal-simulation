@@ -123,7 +123,7 @@ class UAV:
         return new_state
 
 def simulate(filename):
-    obstacles = create_obstacles(SIM_TIME, NUMBER_OF_TIMESTEPS)
+    obstacles = create_obstacles(SIM_TIME, NUMBER_OF_TIMESTEPS, 3, 3)
 
     start_1 = np.array([6, 0])
     start_velocity_1 = np.array([0,0])
@@ -175,12 +175,13 @@ def simulate(filename):
         robot_state_2 = robot_2.update_state(robot_state_2, control_vel)
         robot_state_history_2[:4, i] = robot_state_2
 
-        obstacles = np.dstack((obstacles, robot_state_history_2))
+        #obstacles = np.dstack((obstacles, robot_state_history_2))
         robot_state_history = np.concatenate((robot_state_history_1, robot_state_history_2), axis=1)
     # we can judge the performance of drones by how long they traveled to reach the end position
     print(robot_1.path_length, robot_2.path_length)
+    robot_list = [robot_state_history_1, robot_state_history_2]
     plot_robot_and_obstacles(
-        robot_state_history_1, obstacles, robot_1.robot_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, filename)
+        robot_list, obstacles, robot_1.robot_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, filename)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

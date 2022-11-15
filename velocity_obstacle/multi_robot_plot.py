@@ -3,15 +3,22 @@ import matplotlib.animation as animation
 from matplotlib.patches import Circle
 import numpy as np
 
-def plot_robot_and_obstacles(robot, obstacles, robot_radius, num_steps, sim_time, filename):
+def plot_robot_and_obstacles(robots, obstacles, robot_radius, num_steps, sim_time, filename):
     fig = plt.figure()
     ax = fig.add_subplot(111, autoscale_on=False, xlim=(0, 20), ylim=(0, 20))
     ax.set_aspect('equal')
     ax.grid()
-    line, = ax.plot([], [], '--r')
+    lines = [] #, = ax.plot([], [], '--r')
 
-    robot_patch = Circle((robot[0, 0], robot[1, 0]),
+    robot_list = []
+    for robot in robots:
+        robot_cur = Circle((robot[0, 0], robot[1, 0]),
                          robot_radius, facecolor='green', edgecolor='black')
+        robot_list.append(robot_cur)
+        line, = ax.plot([], [], '--r')
+        lines.append(line)
+    #robot_patch = Circle((robot[0, 0], robot[1, 0]),
+    #                     robot_radius, facecolor='green', edgecolor='black')
     obstacle_list = []
     for obstacle in range(np.shape(obstacles)[2]):
         obstacle = Circle((0, 0), robot_radius,
@@ -19,18 +26,26 @@ def plot_robot_and_obstacles(robot, obstacles, robot_radius, num_steps, sim_time
         obstacle_list.append(obstacle)
 
     def init():
-        ax.add_patch(robot_patch)
+        #ax.add_patch(robot_patch)
+        for i in range(len(robot_list)):
+            ax.add_patch(robot_list[i])
+            lines[i].set_data([], [])
         for obstacle in obstacle_list:
             ax.add_patch(obstacle)
-        line.set_data([], [])
-        return [robot_patch] + [line] + obstacle_list
+        #line.set_data([], [])
+        return robot_list + lines + obstacle_list
+        #return [robot_patch] + [line] + obstacle_list
 
     def animate(i):
-        robot_patch.center = (robot[0, i], robot[1, i])
+        for j in range(len(robot_list)):
+            robot_list[j].center = (robots[j][0, i], robots[j][1, i])
+            lines[j].set_data(robots[j][0, :i], robots[j][1, :i])
+        #robot_patch.center = (robot[0, i], robot[1, i])
         for j in range(len(obstacle_list)):
             obstacle_list[j].center = (obstacles[0, i, j], obstacles[1, i, j])
-        line.set_data(robot[0, :i], robot[1, :i])
-        return [robot_patch] + [line] + obstacle_list
+        #line.set_data(robot[0, :i], robot[1, :i])
+        return robot_list, lines, obstacle_list
+        #return [robot_patch] + [line] + obstacle_list
 
     init()
     step = (sim_time / num_steps)
