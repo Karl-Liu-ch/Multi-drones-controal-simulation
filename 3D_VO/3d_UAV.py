@@ -1,6 +1,6 @@
 import numpy as np
 from multi_robot_plot import plot_robot_and_obstacles
-from creat_UAVs import create_obstacles
+from creat_UAVs_1 import create_obstacles,create_fixed_obstacles_scenario
 import argparse
 
 SIM_TIME = 20.0
@@ -65,7 +65,7 @@ class UAV:
         vz_sample = (vv * np.sin(thzthz)).flatten()
 
         v_sample = np.stack((vx_sample, vy_sample, vz_sample))
-        v_satisfying_constraints = self.RVO(v_sample, v_B, Dis, angle)
+        v_satisfying_constraints = self.VO(v_sample, v_B, Dis, angle)
 
         # Objective function
         size = np.shape(v_satisfying_constraints)[1]
@@ -88,19 +88,21 @@ class UAV:
                 theta = np.arccos(vR.dot(Dis[j]) / (np.linalg.norm(vR) * np.linalg.norm(Dis[j])))
                 if theta < angle[j]:
                     discard = True
+                    break
             if not discard:
                 v_out.append(v[:, i])
         return np.array(v_out).T
 
-    def RVO(self, v, v_B, Dis, angle, timestep = 0.1):
+    def RVO(self, v, v_B, Dis, angle):
         v_out = []
         for i in range(np.shape(v)[1]):
             discard = False
             for j in range(len(Dis)):
                 vR = v[:, i].T - v_B[j]
                 theta = np.arccos(vR.dot(Dis[j]) / (np.linalg.norm(vR) * np.linalg.norm(Dis[j])))
-                if (theta < angle[j]) and ((np.linalg.norm(Dis[j] / timestep - vR)) < Safe_Threshold * 2 * self.robot_radius / timestep):
+                if (theta < angle[j]):
                     discard = True
+                    break
             if not discard:
                 v_out.append(v[:, i])
         return np.array(v_out).T
@@ -199,13 +201,13 @@ def Monitor(obstacles, UAVs, timestep):
                 print("collision of uav {}".format(i))
 
 def simulate(filename):
-    obstacles = create_obstacles(SIM_TIME, NUMBER_OF_TIMESTEPS, 3, 3)
+    obstacles = create_fixed_obstacles_scenario(SIM_TIME, NUMBER_OF_TIMESTEPS, 2)
     starts = [np.array([6, 0, 0])]
     starts.append(np.array([3, 0, 0]))
     starts.append(np.array([8, 0, 0]))
-    goals = [np.array([3, 10, 10])]
-    goals.append(np.array([6, 10, 10]))
-    goals.append(np.array([1, 10, 10]))
+    goals = [np.array([5, 10, 0])]
+    goals.append(np.array([9, 10, 0]))
+    goals.append(np.array([1, 10, 0]))
     UAVs = UAV_cluster(3)
     UAVs.reset(starts, goals)
 

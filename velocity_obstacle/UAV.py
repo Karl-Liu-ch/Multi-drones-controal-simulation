@@ -38,11 +38,16 @@ class UAV:
         number_of_obstacles = np.shape(obstacles)[1]
         Amat = np.empty((number_of_obstacles * 2, 2))
         bvec = np.empty((number_of_obstacles * 2))
+        Dis = []
+        angle = []
+        v_B = []
         for i in range(number_of_obstacles):
             obstacle = obstacles[:, i]
             pB = obstacle[:2]
             vB = obstacle[2:]
             dispBA = pA - pB
+            Dis.append(pB-pA)
+            v_B.append(vB)
             distBA = np.linalg.norm(dispBA)
             thetaBA = np.arctan2(dispBA[1], dispBA[0])
             if Safe_Threshold * 2 * self.robot_radius > distBA:
@@ -50,6 +55,7 @@ class UAV:
             phi_obst = np.arcsin(Safe_Threshold * 2 * self.robot_radius/distBA)
             phi_left = thetaBA + phi_obst
             phi_right = thetaBA - phi_obst
+            angle.append(phi_obst)
 
             # VO
             translation = vB
@@ -71,6 +77,7 @@ class UAV:
 
         v_sample = np.stack((vx_sample, vy_sample))
         v_satisfying_constraints = self.check_constraints(v_sample, Amat, bvec)
+        v_satisfying_constraints = self.RVO(v_sample, v_B, Dis, angle)
 
         # Objective function
         size = np.shape(v_satisfying_constraints)[1]
@@ -83,6 +90,34 @@ class UAV:
             cmd_vel = np.array([0,0])
             self.velocity = np.array([0,0])
         return cmd_vel
+
+    def VO(self, v, v_B, Dis, angle):
+        v_out = []
+        for i in range(np.shape(v)[1]):
+            discard = False
+            for j in range(len(Dis)):
+                vR = v[:,i].T - v_B[j]
+                theta = np.arccos(vR.dot(Dis[j]) / (np.linalg.norm(vR) * np.linalg.norm(Dis[j])))
+                if theta < angle[j]:
+                    discard = True
+                    break
+            if not discard:
+                v_out.append(v[:, i])
+        return np.array(v_out).T
+
+    def RVO(self, v, v_B, Dis, angle, timestep = 0.1):
+        v_out = []
+        for i in range(np.shape(v)[1]):
+            discard = False
+            for j in range(len(Dis)):
+                vR = v[:, i].T - v_B[j]
+                theta = np.arccos(vR.dot(Dis[j]) / (np.linalg.norm(vR) * np.linalg.norm(Dis[j])))
+                if (theta < angle[j]) and ((np.linalg.norm(Dis[j] / timestep - vR)) < Safe_Threshold * 2 * self.robot_radius / timestep):
+                    discard = True
+                    break
+            if not discard:
+                v_out.append(v[:, i])
+        return np.array(v_out).T
 
     def check_constraints(self, v_sample, Amat, bvec):
         length = np.shape(bvec)[0]
