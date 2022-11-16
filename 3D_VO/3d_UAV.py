@@ -37,10 +37,6 @@ class UAV:
         # Compute the constraints
         # for each velocity obstacles
         number_of_obstacles = np.shape(obstacles)[1]
-        Amat = np.empty((number_of_obstacles * 2, 2))
-        bvec = np.empty((number_of_obstacles * 2))
-        Amat_z = np.empty((number_of_obstacles * 2, 2))
-        bvec_z = np.empty((number_of_obstacles * 2))
         Dis = []
         angle = []
         v_B = []
@@ -49,44 +45,13 @@ class UAV:
             pB = obstacle[:3]
             vB = obstacle[3:]
             v_B.append(vB)
-            dispBA = pA[:2] - pB[:2]
-            dispBA_z = pA[-2:] - pB[-2:]
-            distBA = np.linalg.norm(dispBA)
-            distBA_z = np.linalg.norm(dispBA_z)
-            thetaBA = np.arctan2(dispBA[1], dispBA[0])
-            thetaBA_z = np.arctan2(dispBA_z[1], dispBA_z[0])
             Dis.append(pB - pA)
             absD = np.linalg.norm(pA - pB)
             if Safe_Threshold * 2 * self.robot_radius > absD:
                 absD = Safe_Threshold * 2 * self.robot_radius
             angle.append(np.arcsin(Safe_Threshold * 2 * self.robot_radius / absD))
-            if Safe_Threshold * 2 * self.robot_radius > distBA:
-                distBA = Safe_Threshold * 2 * self.robot_radius
-            if Safe_Threshold * 2 * self.robot_radius > distBA_z:
-                distBA_z = Safe_Threshold * 2 * self.robot_radius
-            phi_obst = np.arcsin(Safe_Threshold * 2 * self.robot_radius / distBA)
-            phi_left = thetaBA + phi_obst
-            phi_right = thetaBA - phi_obst
-            phi_obst_z = np.arcsin(Safe_Threshold * 2 * self.robot_radius / distBA_z)
-            phi_up = thetaBA_z + phi_obst_z
-            phi_down = thetaBA_z - phi_obst_z
 
             # VO
-            translation = vB[:2]
-            Atemp, btemp = self.create_constraints(translation, phi_left, "left")
-            Amat[i * 2, :] = Atemp
-            bvec[i * 2] = btemp
-            Atemp, btemp = self.create_constraints(translation, phi_right, "right")
-            Amat[i * 2 + 1, :] = Atemp
-            bvec[i * 2 + 1] = btemp
-            translation_z = vB[-2:]
-            Atemp, btemp = self.create_constraints(translation_z, phi_up, "left")
-            Amat_z[i * 2, :] = Atemp
-            bvec_z[i * 2] = btemp
-            Atemp, btemp = self.create_constraints(translation_z, phi_down, "right")
-            Amat_z[i * 2 + 1, :] = Atemp
-            bvec_z[i * 2 + 1] = btemp
-
         # Create search-space
         th = np.linspace(0, 2 * np.pi, 20)
         th_z = np.linspace(-np.pi, np.pi, 20)
@@ -100,8 +65,7 @@ class UAV:
         vz_sample = (vv * np.sin(thzthz)).flatten()
 
         v_sample = np.stack((vx_sample, vy_sample, vz_sample))
-        # v_satisfying_constraints = self.check_constraints(v_sample, Amat, bvec, Amat_z, bvec_z)
-        v_satisfying_constraints = self.check_inside_3d(v_sample, v_B, Dis, angle)
+        v_satisfying_constraints = self.RVO(v_sample, v_B, Dis, angle)
 
         # Objective function
         size = np.shape(v_satisfying_constraints)[1]
@@ -115,7 +79,7 @@ class UAV:
             self.velocity = np.array([0, 0])
         return cmd_vel
 
-    def check_inside_3d(self, v, v_B, Dis, angle):
+    def VO(self, v, v_B, Dis, angle):
         v_out = []
         for i in range(np.shape(v)[1]):
             discard = False
@@ -128,55 +92,18 @@ class UAV:
                 v_out.append(v[:, i])
         return np.array(v_out).T
 
-    def check_constraints(self, v_sample, Amat, bvec, Amat_z, bvec_z):
-        length = np.shape(bvec)[0]
-        for i in range(int(length / 2)):
-            v_sample = self.check_inside(v_sample, Amat[2 * i:2 * i + 2, :], bvec[2 * i:2 * i + 2]
-                                         , Amat_z[2 * i:2 * i + 2, :], bvec_z[2 * i:2 * i + 2])
-
-        return v_sample
-
-    def check_inside(self, v, Amat, bvec, Amat_z, bvec_z):
+    def RVO(self, v, v_B, Dis, angle, timestep = 0.1):
         v_out = []
         for i in range(np.shape(v)[1]):
-            if not (((Amat @ v[:2, i] < bvec).all()) and ((Amat_z @ v[-2:, i] < bvec_z).all())):
+            discard = False
+            for j in range(len(Dis)):
+                vR = v[:, i].T - v_B[j]
+                theta = np.arccos(vR.dot(Dis[j]) / (np.linalg.norm(vR) * np.linalg.norm(Dis[j])))
+                if (theta < angle[j]) and ((np.linalg.norm(Dis[j] / timestep - vR)) < Safe_Threshold * 2 * self.robot_radius / timestep):
+                    discard = True
+            if not discard:
                 v_out.append(v[:, i])
         return np.array(v_out).T
-
-    def create_constraints(self, translation, angle, side):
-        # create line
-        origin = np.array([0, 0, 1])
-        point = np.array([np.cos(angle), np.sin(angle)])
-        line = np.cross(origin, point)
-        line = self.translate_line(line, translation)
-
-        if side == "left":
-            line *= -1
-
-        A = line[:2]
-        b = -line[2]
-
-        return A, b
-
-    def create_constraints_3d(self, translation, angle, side):
-        # create line
-        origin = np.array([0, 0, 1])
-        point = np.array([np.cos(angle), np.sin(angle)])
-        line = np.cross(origin, point)
-        line = self.translate_line(line, translation)
-
-        if side == "left":
-            line *= -1
-
-        A = line[:2]
-        b = -line[2]
-
-        return A, b
-
-    def translate_line(self, line, translation):
-        matrix = np.eye(3)
-        matrix[2, :2] = -translation[:2]
-        return matrix @ line
 
     def update_state(self, x, v):
         new_state = np.empty((6))
@@ -270,7 +197,6 @@ def Monitor(obstacles, UAVs, timestep):
             if d < UAVs[i].robot_radius + 0.5:
                 # UAVs[i].collide = True
                 print("collision of uav {}".format(i))
-
 
 def simulate(filename):
     obstacles = create_obstacles(SIM_TIME, NUMBER_OF_TIMESTEPS, 3, 3)
