@@ -1,15 +1,17 @@
 import numpy as np
 
 class Obstacle:
-    def __init__(self, position: np.array, velocity: np.array):
+    def __init__(self, position: np.array, velocity: np.array, radius, height):
         self.position = position
         self.velocity = velocity
+        self.radius = radius
+        self.height = height
 
 def create_obstacles(sim_time, num_timesteps, num_static, num_moving):
 
     for i in range(num_moving):
         obstacle = Obstacle(np.array([np.random.uniform(0, 10), np.random.uniform(0, 10)+1, 0]),
-                            np.array([np.random.uniform(-1, 1), np.random.uniform(-1, 1), 0]))
+                            np.array([np.random.uniform(-1, 1), np.random.uniform(-1, 1), 0]), 0.5, 10)
         obst = create_robot(obstacle.position, obstacle.velocity, sim_time, num_timesteps).reshape(6, num_timesteps, 1)
         try:
             obstacles
@@ -20,7 +22,7 @@ def create_obstacles(sim_time, num_timesteps, num_static, num_moving):
     
 
     for i in range(num_static):
-        obstacle = Obstacle(np.array([np.random.uniform(0, 10), np.random.uniform(0, 10)+1, 0]), (0, 0, 0))
+        obstacle = Obstacle(np.array([np.random.uniform(0, 10), np.random.uniform(0, 10)+1, 0]), (0, 0, 0), 0.5, 10)
         obst = create_robot(obstacle.position, obstacle.velocity, sim_time, num_timesteps).reshape(6, num_timesteps, 1)
         try:
             obstacles

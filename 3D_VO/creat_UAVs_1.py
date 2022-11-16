@@ -45,21 +45,29 @@ def create_robot(p0, v, sim_time, num_timesteps):
     return p
 
 def create_fixed_obstacles_scenario(sim_time, num_timesteps,scenario):
-    
-
+    Obs = []
     if scenario == 1: #oneway
         y_o = 5
         num_o = 12
         for i in range(num_o): 
-            if i != num_o/2 and i!=num_o/2+1:
-                obstacle = Obstacle(np.array([i-0.5, y_o, 0]), (0, 0, 0))
-                obst = create_robot(obstacle.position, obstacle.velocity, sim_time, num_timesteps).reshape(6, num_timesteps, 1)
-                try:
-                    obstacles
-                except:
-                    obstacles = obst
-                else:
-                    obstacles = np.dstack((obstacles, obst))
+            # if i != num_o/2 and i!=num_o/2+1:
+            obstacle = Obstacle(np.array([i-0.5, y_o, 2]), (0, 0, 0))
+            Obs.append(obstacle)
+            obst = create_robot(obstacle.position, obstacle.velocity, sim_time, num_timesteps).reshape(6, num_timesteps, 1)
+            try:
+                obstacles
+            except:
+                obstacles = obst
+            else:
+                obstacles = np.dstack((obstacles, obst))
+            obstacle = Obstacle(np.array([i - 0.5, y_o, 1]), (0, 0, 0))
+            obst = create_robot(obstacle.position, obstacle.velocity, sim_time, num_timesteps).reshape(6, num_timesteps,
+                                                                                                       1)
+            obstacles = np.dstack((obstacles, obst))
+            obstacle = Obstacle(np.array([i - 0.5, y_o, 0]), (0, 0, 0))
+            obst = create_robot(obstacle.position, obstacle.velocity, sim_time, num_timesteps).reshape(6, num_timesteps,
+                                                                                                       1)
+            obstacles = np.dstack((obstacles, obst))
     elif scenario == 2: #obs split from middle 
         x_0 = 10
         for i in range(9):
@@ -111,4 +119,4 @@ def create_fixed_obstacles_scenario(sim_time, num_timesteps,scenario):
                     obstacles = obst
                 else:
                     obstacles = np.dstack((obstacles, obst))
-    return obstacles
+    return obstacles, Obs

@@ -2,6 +2,7 @@ import numpy as np
 from multi_robot_plot import plot_robot_and_obstacles
 from creat_UAVs_1 import create_obstacles,create_fixed_obstacles_scenario
 import argparse
+from visualization import visualization
 
 SIM_TIME = 20.0
 NUMBER_OF_TIMESTEPS = int(20.0 / 0.1)
@@ -31,7 +32,7 @@ class UAV:
         desired_vel = self.vmax * disp_vec
         return desired_vel
 
-    def compute_velocity(self, obstacles, v_desired):
+    def compute_velocity(self, obstacles, robots, v_desired):
         pA = self.position
         vA = self.velocity
         # Compute the constraints
@@ -40,32 +41,57 @@ class UAV:
         Dis = []
         angle = []
         v_B = []
+        Dis_xy_ob = []
+        Dis_yz_ob = []
+        angle_xy_ob = []
+        angle_yz_ob = []
+        v_B_xy = []
+        v_B_yz = []
         # Create search-space
         th = np.linspace(0, 2 * np.pi, 20)
         th_z = np.linspace(-np.pi, np.pi, 20)
         vel = np.linspace(0, self.vmax, 5)
-
         vv, thth, thzthz = np.meshgrid(vel, th, th_z)
-        # [vv, thth], thzthz = np.meshgrid([vv, thth], th_z)
-
         vx_sample = (vv * np.cos(thzthz) * np.cos(thth)).flatten()
         vy_sample = (vv * np.cos(thzthz) * np.sin(thth)).flatten()
         vz_sample = (vv * np.sin(thzthz)).flatten()
-
         v_sample = np.stack((vx_sample, vy_sample, vz_sample))
         for i in range(number_of_obstacles):
             obstacle = obstacles[:, i]
             pB = obstacle[:3]
             vB = obstacle[3:]
+            pB_xy = obstacle[:2]
+            pB_yz = obstacle[1:3]
+            vB_xy = obstacle[3:5]
+            vB_yz = obstacle[4:6]
+            v_B_xy.append(vB_xy), v_B_yz.append(vB_yz)
+            v_B.append(vB)
+            Dis_xy = pB_xy - pA[:2]
+            Dis_yz = pB_yz - pA[1:3]
+            Dis_xy_ob.append(Dis_xy)
+            Dis_yz_ob.append(Dis_yz)
+            abdDis_xy = np.linalg.norm(Dis_xy)
+            abdDis_yz = np.linalg.norm(Dis_yz)
+            if Safe_Threshold * 2 * self.robot_radius > abdDis_xy:
+                abdDis_xy = Safe_Threshold * 2 * self.robot_radius
+            angle_xy_ob.append(np.arcsin(Safe_Threshold * 2 * self.robot_radius / abdDis_xy))
+            if Safe_Threshold * 2 * self.robot_radius > abdDis_yz:
+                abdDis_yz = Safe_Threshold * 2 * self.robot_radius
+            angle_yz_ob.append(np.arcsin(Safe_Threshold * 2 * self.robot_radius / abdDis_yz))
+
+        for robot in robots:
+            pB = robot.position.astype(np.float64)
+            vB = robot.velocity.astype(np.float64)
             v_B.append(vB)
             Dis.append(pB - pA)
             absD = np.linalg.norm(pA - pB)
-            if Safe_Threshold * 2 * self.robot_radius > absD:
-                absD = Safe_Threshold * 2 * self.robot_radius
-            angle.append(np.arcsin(Safe_Threshold * 2 * self.robot_radius / absD))
-
+            if Safe_Threshold * (self.robot_radius + robot.robot_radius) > absD:
+                absD = Safe_Threshold * (self.robot_radius + robot.robot_radius)
+            angle.append(np.arcsin(Safe_Threshold * (self.robot_radius + robot.robot_radius) / absD))
             # VO
         v_satisfying_constraints = self.VO(v_sample, v_B, Dis, angle)
+        v_satisfying_constraints = self.VO_ob(v_satisfying_constraints, v_B_xy, v_B_yz,
+                                              Dis_xy_ob, Dis_yz_ob, angle_xy_ob, angle_yz_ob)
 
         # Objective function
         size = np.shape(v_satisfying_constraints)[1]
@@ -79,6 +105,24 @@ class UAV:
             self.velocity = np.array([0, 0])
         return cmd_vel
 
+    def VO_ob(self, v, v_B_xy, v_B_yz, Dis_xy, Dis_yz, angle_xy, angle_yz):
+        v_out = []
+        for i in range(np.shape(v)[1]):
+            discard = False
+            for j in range(len(Dis_xy)):
+                vR_xy = v[:2, i].T - v_B_xy[j]
+                vR_yz = v[-2:, i].T - v_B_yz[j]
+                theta_xy = np.arccos(vR_xy.dot(Dis_xy[j]) / (np.linalg.norm(vR_xy) * np.linalg.norm(Dis_xy[j])))
+                theta_yz = np.arccos(vR_yz.dot(Dis_yz[j]) / (np.linalg.norm(vR_yz) * np.linalg.norm(Dis_yz[j])))
+                alpha = np.arctan2(Dis_yz[j][1], Dis_yz[j][0])
+                alpha_v = np.arctan2(vR_yz[1], vR_yz[0])
+                if (theta_xy < angle_xy[j]) and ((theta_yz < angle_yz[j]) or (alpha_v < alpha)):
+                    discard = True
+                    break
+            if not discard:
+                v_out.append(v[:, i])
+        return np.array(v_out).T
+
     def VO(self, v, v_B, Dis, angle):
         v_out = []
         for i in range(np.shape(v)[1]):
@@ -87,20 +131,6 @@ class UAV:
                 vR = v[:, i].T - v_B[j]
                 theta = np.arccos(vR.dot(Dis[j]) / (np.linalg.norm(vR) * np.linalg.norm(Dis[j])))
                 if theta < angle[j]:
-                    discard = True
-                    break
-            if not discard:
-                v_out.append(v[:, i])
-        return np.array(v_out).T
-
-    def RVO(self, v, v_B, Dis, angle):
-        v_out = []
-        for i in range(np.shape(v)[1]):
-            discard = False
-            for j in range(len(Dis)):
-                vR = v[:, i].T - v_B[j]
-                theta = np.arccos(vR.dot(Dis[j]) / (np.linalg.norm(vR) * np.linalg.norm(Dis[j])))
-                if (theta < angle[j]):
                     discard = True
                     break
             if not discard:
@@ -141,21 +171,13 @@ class UAV_cluster():
             self.robot_state_history.append(robot_state_history)
 
     def detect(self, index_of_self):
-        step = 0
-        robots_states = np.empty((6, 1))
+        robots = []
         for i in range(len(self.UAVs)):
             if i == index_of_self:
                 pass
             else:
-                robot_state = self.robot_state[i]
-                robot_state = np.reshape(robot_state, (6, 1))
-                robot_state += DETECT_NOISE * np.random.normal(size=robot_state.shape)
-                if step == 0:
-                    robots_states = robot_state
-                else:
-                    robots_states = np.concatenate((robots_states, robot_state), axis=1)
-                step += 1
-        return robots_states
+                robots.append(self.UAVs[i])
+        return robots
 
     def update(self, obstacles, time_step):
         for i in range(len(self.UAVs)):
@@ -163,11 +185,10 @@ class UAV_cluster():
                 # try:
                 v_desired = self.UAVs[i].compute_desired_velocity()
                 # here I added noise of detection of all obstacles and all other drones
-                robots_states = self.detect(i)
+                robots = self.detect(i)
                 obstate = obstacles[:, time_step, :] + DETECT_NOISE * np.random.normal(
                     size=obstacles[:, time_step, :].shape)
-                control_vel = self.UAVs[i].compute_velocity(
-                    np.concatenate((obstate, robots_states), axis=1), v_desired)
+                control_vel = self.UAVs[i].compute_velocity(obstate, robots, v_desired)
                 if self.UAVs[i].collide == True:
                     control_vel = np.array([0, 0, 0])
                 # except:
@@ -201,7 +222,7 @@ def Monitor(obstacles, UAVs, timestep):
                 print("collision of uav {}".format(i))
 
 def simulate(filename):
-    obstacles = create_fixed_obstacles_scenario(SIM_TIME, NUMBER_OF_TIMESTEPS, 1)
+    obstacles, OBS = create_fixed_obstacles_scenario(SIM_TIME, NUMBER_OF_TIMESTEPS, 1)
     starts = [np.array([1, 10, 0])]
     starts.append(np.array([5, 0, 0]))
     starts.append(np.array([9, 0, 0]))
@@ -217,9 +238,10 @@ def simulate(filename):
         # Update frequency parameter
         UAVs.update(obstacles, i)
         Monitor(obstacles, UAVs.UAVs, i)
-        # print(UAVs.robot_state_history[0][:6,i])
+        print(UAVs.robot_state[0])
     plot_robot_and_obstacles(
         UAVs.robot_state_history, obstacles, UAVs.UAVs[0].robot_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, filename)
+    visualization(UAVs.robot_state_history, OBS)
 
 
 if __name__ == '__main__':
