@@ -7,7 +7,7 @@ from visualization import visualization
 SIM_TIME = 20.0
 TIMESTEP = 0.1
 NUMBER_OF_TIMESTEPS = int(SIM_TIME / TIMESTEP)
-DETECT_NOISE = 0.01
+DETECT_NOISE = 0.05
 update_frequency = 1
 Safe_Threshold = 1.1
 
@@ -62,7 +62,7 @@ class UAV:
         v_sample = np.stack((vx_sample, vy_sample, vz_sample))
         for i in range(number_of_obstacles):
             obstacle = obstacles[i]
-            pB = obstacle.position
+            pB = obstacle.position + DETECT_NOISE * np.random.uniform(low=-1.0, high=1.0, size=obstacle.position.shape)
             vB = obstacle.velocity
             pB_xy = pB[:2]
             pB_yz_down = pB[1:3]
@@ -95,8 +95,8 @@ class UAV:
             angle_yz_ob_up.append(angle_d + angle_r)
 
         for robot in robots:
-            pB = robot.position.astype(np.float64)
-            vB = robot.velocity.astype(np.float64)
+            pB = robot.position.astype(np.float64) + DETECT_NOISE * np.random.uniform(low=-1.0, high=1.0, size=robot.position.shape)
+            vB = robot.velocity.astype(np.float64) + DETECT_NOISE * np.random.uniform(low=-1.0, high=1.0, size=robot.velocity.shape)
             v_B.append(vB)
             Dis.append(pB - pA)
             absD = np.linalg.norm(pA - pB)
@@ -163,7 +163,7 @@ class UAV:
         new_state[-3:] = v
         old_position = self.position
         self.position = new_state[:3]
-        self.path_length += np.linalg.norm(self.position - old_position)
+        self.path_length = np.linalg.norm(self.position - old_position)
         self.velocity = v
         return new_state
 
@@ -173,6 +173,7 @@ class UAV_cluster():
         start_velocity = np.array([0, 0])
         goal = np.array([0, 10])
         self.UAVs = [UAV(start, start_velocity, goal, 0.5, 2.0) for i in range(nums_uav)]
+        self.path_length = 0.0
 
     def reset(self, starts, ends):
         assert len(starts) == len(self.UAVs)
@@ -219,6 +220,7 @@ class UAV_cluster():
                 control_vel = self.UAVs[i].velocity
             self.robot_state[i] = self.UAVs[i].update_state(self.robot_state[i], control_vel)
             self.robot_state_history[i][:6, time_step] = self.robot_state[i]
+            self.path_length += self.UAVs[i].path_length
 
 def cal_distance(x, y):
     return np.linalg.norm(x - y)
@@ -270,7 +272,7 @@ def simulate(filename):
     goals.append(np.array([9, 10, 5]))
     UAVs = UAV_cluster(len(goals))
     UAVs.reset(starts, goals)
-
+    path = 0.0
     for i in range(NUMBER_OF_TIMESTEPS):
         # Update frequency parameter
         OBS.update(i)
@@ -278,6 +280,7 @@ def simulate(filename):
         Monitor(OBS.obs, UAVs.UAVs, i)
         # print(UAVs.robot_state[0])
         print(i)
+    print(UAVs.path_length)
     plot_robot_and_obstacles(
         UAVs.robot_state_history, OBS.obs_state_history, UAVs.UAVs[0].robot_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, filename)
     visualization(UAVs.robot_state_history, OBS.obs, NUMBER_OF_TIMESTEPS)
