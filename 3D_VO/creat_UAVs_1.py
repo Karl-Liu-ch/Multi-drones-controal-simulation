@@ -26,16 +26,17 @@ class Obstacles:
         start_velocity = np.array([0, 0, 0])
         self.obs = [Obstacle(start, start_velocity, 2, 0.5, TIMESTEP) for i in range(nums_obs)]
 
-    def reset(self, starts, start_v, height, NUMBER_OF_TIMESTEPS):
+    def reset(self, starts, start_v, height, r, NUMBER_OF_TIMESTEPS):
         assert len(starts) == len(self.obs)
         assert len(start_v) == len(self.obs)
         assert len(height) == len(self.obs)
+        assert len(r) == len(self.obs)
         self.obs_state = []
         self.obs_state_history = []
         for i in range(len(self.obs)):
             start = starts[i]
             start_velocity = start_v[i]
-            self.obs[i] = Obstacle(start, start_velocity, height[i], 0.5, TIMESTEP)
+            self.obs[i] = Obstacle(start, start_velocity, height[i], r[i], TIMESTEP)
             obs_state = np.append(start, start_velocity)
             obs_state = obs_state.astype(np.float64)
             obs_state_history = np.empty((6, NUMBER_OF_TIMESTEPS))

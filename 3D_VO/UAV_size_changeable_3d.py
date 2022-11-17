@@ -176,7 +176,7 @@ class UAV_cluster():
         self.UAVs = [UAV(start, start_velocity, goal, 0.5, 2.0) for i in range(nums_uav)]
         self.path_length = 0.0
 
-    def reset(self, starts, ends):
+    def reset(self, starts, ends, r, v):
         assert len(starts) == len(self.UAVs)
         assert len(ends) == len(self.UAVs)
         self.robot_state = []
@@ -185,7 +185,7 @@ class UAV_cluster():
             start = starts[i]
             start_velocity = np.array([0, 0, 0])
             goal = ends[i]
-            self.UAVs[i] = UAV(start, start_velocity, goal, 0.5, 2.0)
+            self.UAVs[i] = UAV(start, start_velocity, goal, r[i], v[i])
             robot_state = np.append(start, start_velocity)
             robot_state = robot_state.astype(np.float64)
             robot_state_history = np.empty((6, NUMBER_OF_TIMESTEPS))
@@ -264,8 +264,9 @@ def simulate(DETECT_NOISE = 0.05, update_frequency = 1, Safe_Threshold = 1.1):
     starts.append(np.array([10, 6, 0]))
     v = [np.array([0.0, 0.0, 0.0]) for i in range(len(starts))]
     h = [12, 5, 2, 8, 9, 13, 6, 4]
+    R = [0.5 for i in range(len(starts))]
     OBS = Obstacles(len(h), TIMESTEP)
-    OBS.reset(starts, v, h, NUMBER_OF_TIMESTEPS)
+    OBS.reset(starts, v, h, R, NUMBER_OF_TIMESTEPS)
     # set uavs
     starts = [np.array([1, 10, 5])]
     starts.append(np.array([5, 0, 5]))
@@ -275,8 +276,10 @@ def simulate(DETECT_NOISE = 0.05, update_frequency = 1, Safe_Threshold = 1.1):
     goals.append(np.array([5, 10, 5]))
     goals.append(np.array([1, 10, 5]))
     goals.append(np.array([9, 10, 5]))
+    r = [0.5 for i in range(len(starts))]
+    vmax = [2.0 for i in range(len(starts))]
     UAVs = UAV_cluster(len(goals))
-    UAVs.reset(starts, goals)
+    UAVs.reset(starts, goals, r, vmax)
     path = 0.0
     self_collision = 0
     obs_collision = 0
@@ -335,7 +338,7 @@ if __name__ == '__main__':
         "-f", "--filename", help="filename, in case you want to save the animation")
     args = parser.parse_args()
     ROOT = 'simulation_results/'
-    # PATH = 'UAVs{}_OBS{}_DN{}_UF{}_ST{}/'.format(4, 8, DETECT_NOISE, update_frequency, Safe_Threshold)
+    PATH = 'UAVs{}_OBS{}_DN{}_UF{}_ST{}/'.format(4, 8, 0.01, 1, 1.1)
     for i in range(20):
         DETECT_NOISE = i * 0.01
         for j in range(5):
@@ -344,8 +347,8 @@ if __name__ == '__main__':
                 Safe_Threshold = 1 + 0.1 * k
                 UAVs, OBS = simulate(DETECT_NOISE, update_frequency, Safe_Threshold)
                 print("saved noise {} update frequency {} safe threshold {}".format(DETECT_NOISE, update_frequency, Safe_Threshold))
-    # robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results = load_uavs_obs(PATH=PATH)
-    # plot_robot_and_obstacles(
-    #     robot_state_history, obs_state_history, 0.5, NUMBER_OF_TIMESTEPS, SIM_TIME, args.filename)
-    # visualization(robot_state_history, robots_radius, obs_state_history, obs_radius, obs_heights, NUMBER_OF_TIMESTEPS)
-    # print(results)
+    robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results = load_uavs_obs(PATH=PATH)
+    plot_robot_and_obstacles(
+        robot_state_history, obs_state_history, 0.5, NUMBER_OF_TIMESTEPS, SIM_TIME, args.filename)
+    visualization(robot_state_history, robots_radius, obs_state_history, obs_radius, obs_heights, NUMBER_OF_TIMESTEPS)
+    print(results)
