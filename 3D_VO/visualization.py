@@ -22,10 +22,14 @@ def visualization(robots_states, robots_radius, obstacles_states, obs_radius, ob
     y = [obs_radius[i] * np.outer(np.cos(u), np.ones(len(h))) for i in range(len(obstacles_states))]
     z = [obs_heights[i] * np.outer(np.ones(len(u)), h) for i in range(len(obstacles_states))]
     surface_color = "tab:blue"
+    lines = []
     def init():
         for i in range(len(robots_states)):
             ax.plot_surface(x0[i] + robots_states[i][0, 0], y0[i] + robots_states[i][1, 0],
                             z0[i] + robots_states[i][2, 0], color=surface_color)
+            line, = ax.plot([], [], [], '--r')
+            lines.append(line)
+            # lines[i].set_data([], [], [])
         for j in range(len(obstacles_states)):
             ax.plot_surface(x[j] + obstacles_states[j][0, 0], y[j] + obstacles_states[j][1, 0],
                             z[j] + obstacles_states[j][2, 0], cmap=plt.get_cmap('Greens'))
@@ -51,6 +55,10 @@ def visualization(robots_states, robots_radius, obstacles_states, obs_radius, ob
             position = robot_state[:3, t]
             px, py, pz = position[0], position[1], position[2]
             ax.plot_surface(x0[j] + px, y0[j] + py, z0[j] + pz, color=surface_color)
+            lines[j].set_data(robots_states[j][0, :t], robots_states[j][1, :t])
+            lines[j].set_3d_properties(robots_states[j][2, :t], 'z')
+            ax.plot(robots_states[j][0, :t], robots_states[j][1, :t], robots_states[j][2, :t], '--r')
+
         for k in range(len(obstacles_states)):
             ob_state = obstacles_states[k]
             position = ob_state[:3, t]

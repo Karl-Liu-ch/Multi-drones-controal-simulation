@@ -346,7 +346,10 @@ if __name__ == '__main__':
     for i in range(2):
         DETECT_NOISE = (i+4) * 0.02
         for j in range(3):
-            update_frequency = j + 1
+            if i == 0 and j == 0:
+                break
+            else:
+                update_frequency = j + 1
             for k in range(4):
                 Safe_Threshold = 1 + 0.1 * (k + 1)
                 UAVs, OBS = simulate(DETECT_NOISE, update_frequency, Safe_Threshold)
