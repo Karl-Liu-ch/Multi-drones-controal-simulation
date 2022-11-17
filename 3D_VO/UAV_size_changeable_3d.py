@@ -244,7 +244,7 @@ def Monitor(obstacles, UAVs, timestep):
             ob = obstacles[k].position
             h = obstacles[k].height
             d = cal_distance(UAVs[i].position[:2], ob[:2])
-            if (d < UAVs[i].robot_radius + 0.5) and (UAVs[i].position[2] < h + UAVs[i].robot_radius):
+            if (d < UAVs[i].robot_radius + obstacles[k].radius) and (UAVs[i].position[2] < h + UAVs[i].robot_radius):
                 # UAVs[i].collide = True
                 obs_collition += 1
                 print(UAVs[i].position)
@@ -343,14 +343,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
     ROOT = 'simulation_results/'
     PATH = 'UAVs{}_OBS{}_DN{}_UF{}_ST{}/'.format(4, 8, 0.01, 1, 1.1)
-    # for i in range(2):
-    #     DETECT_NOISE = (i+4) * 0.02
-    #     for j in range(3):
-    #         update_frequency = j + 1
-    #         for k in range(4):
-    #             Safe_Threshold = 1 + 0.1 * (k + 1)
-    #             UAVs, OBS = simulate(DETECT_NOISE, update_frequency, Safe_Threshold)
-    #             print("saved noise {} update frequency {} safe threshold {}".format(DETECT_NOISE, update_frequency, Safe_Threshold))
+    for i in range(2):
+        DETECT_NOISE = (i+4) * 0.02
+        for j in range(3):
+            update_frequency = j + 1
+            for k in range(4):
+                Safe_Threshold = 1 + 0.1 * (k + 1)
+                UAVs, OBS = simulate(DETECT_NOISE, update_frequency, Safe_Threshold)
+                print("saved noise {} update frequency {} safe threshold {}".format(DETECT_NOISE, update_frequency, Safe_Threshold))
     robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results = load_uavs_obs(PATH=PATH)
     plot_robot_and_obstacles(
         robot_state_history, obs_state_history, robots_radius, obs_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, args.filename)
