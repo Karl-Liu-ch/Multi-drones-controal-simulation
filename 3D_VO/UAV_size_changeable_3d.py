@@ -299,6 +299,10 @@ def simulate(DETECT_NOISE = 0.05, update_frequency = 1, Safe_Threshold = 1.1):
     results['obstacles_collition'] = obs_collision
     PATH = 'UAVs{}_OBS{}_DN{}_UF{}_ST{}/'.format(len(UAVs.UAVs), len(OBS.obs), DETECT_NOISE, update_frequency, Safe_Threshold)
     try:
+        os.mkdir('simulation_results/')
+    except:
+        pass
+    try:
         os.mkdir('simulation_results/'+PATH)
     except:
         pass
