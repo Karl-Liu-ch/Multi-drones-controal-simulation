@@ -343,16 +343,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
     ROOT = 'simulation_results/'
     PATH = 'UAVs{}_OBS{}_DN{}_UF{}_ST{}/'.format(4, 8, 0.01, 1, 1.1)
-    for i in range(20):
-        DETECT_NOISE = i * 0.01
-        for j in range(5):
-            update_frequency = j + 1
-            for k in range(10):
-                Safe_Threshold = 1 + 0.1 * k
-                UAVs, OBS = simulate(DETECT_NOISE, update_frequency, Safe_Threshold)
-                print("saved noise {} update frequency {} safe threshold {}".format(DETECT_NOISE, update_frequency, Safe_Threshold))
+    # for i in range(2):
+    #     DETECT_NOISE = (i+4) * 0.02
+    #     for j in range(3):
+    #         update_frequency = j + 1
+    #         for k in range(4):
+    #             Safe_Threshold = 1 + 0.1 * (k + 1)
+    #             UAVs, OBS = simulate(DETECT_NOISE, update_frequency, Safe_Threshold)
+    #             print("saved noise {} update frequency {} safe threshold {}".format(DETECT_NOISE, update_frequency, Safe_Threshold))
     robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results = load_uavs_obs(PATH=PATH)
     plot_robot_and_obstacles(
-        robot_state_history, obs_state_history, 0.5, NUMBER_OF_TIMESTEPS, SIM_TIME, args.filename)
+        robot_state_history, obs_state_history, robots_radius, obs_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, args.filename)
     visualization(robot_state_history, robots_radius, obs_state_history, obs_radius, obs_heights, NUMBER_OF_TIMESTEPS)
     print(results)

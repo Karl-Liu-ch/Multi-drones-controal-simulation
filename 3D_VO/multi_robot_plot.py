@@ -3,7 +3,7 @@ import matplotlib.animation as animation
 from matplotlib.patches import Circle
 import numpy as np
 
-def plot_robot_and_obstacles(robots, obstacles, robot_radius, num_steps, sim_time, filename):
+def plot_robot_and_obstacles(robots, obstacles, robots_radius, obs_radius, num_steps, sim_time, filename):
     fig = plt.figure()
     ax = fig.add_subplot(111, autoscale_on=False, xlim=(0, 20), ylim=(0, 20))
     ax.set_aspect('equal')
@@ -11,9 +11,9 @@ def plot_robot_and_obstacles(robots, obstacles, robot_radius, num_steps, sim_tim
     lines = [] #, = ax.plot([], [], '--r')
 
     robot_list = []
-    for robot in robots:
-        robot_cur = Circle((robot[0, 0], robot[1, 0]),
-                         robot_radius, facecolor='green', edgecolor='black')
+    for i in range(len(robots)):
+        robot_cur = Circle((robots[i][0, 0], robots[i][1, 0]),
+                         robots_radius[i], facecolor='green', edgecolor='black')
         robot_list.append(robot_cur)
         line, = ax.plot([], [], '--r')
         lines.append(line)
@@ -21,9 +21,9 @@ def plot_robot_and_obstacles(robots, obstacles, robot_radius, num_steps, sim_tim
     #                     robot_radius, facecolor='green', edgecolor='black')
 
     obstacle_list = []
-    for obstacle in obstacles:
-        obstacle_cur = Circle((obstacle[0, 0], obstacle[1, 0]),
-                           robot_radius, facecolor='blue', edgecolor='black')
+    for j in range(len(obstacles)):
+        obstacle_cur = Circle((obstacles[j][0, 0], obstacles[j][1, 0]),
+                           obs_radius[j], facecolor='blue', edgecolor='black')
         obstacle_list.append(obstacle_cur)
         line, = ax.plot([], [], '--r')
         lines.append(line)
