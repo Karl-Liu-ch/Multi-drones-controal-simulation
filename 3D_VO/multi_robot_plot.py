@@ -19,11 +19,20 @@ def plot_robot_and_obstacles(robots, obstacles, robot_radius, num_steps, sim_tim
         lines.append(line)
     #robot_patch = Circle((robot[0, 0], robot[1, 0]),
     #                     robot_radius, facecolor='green', edgecolor='black')
+
     obstacle_list = []
-    for obstacle in range(np.shape(obstacles)[2]):
-        obstacle = Circle((0, 0), robot_radius,
-                          facecolor='aqua', edgecolor='black')
-        obstacle_list.append(obstacle)
+    for obstacle in obstacles:
+        obstacle_cur = Circle((obstacle[0, 0], obstacle[1, 0]),
+                           robot_radius, facecolor='blue', edgecolor='black')
+        obstacle_list.append(obstacle_cur)
+        line, = ax.plot([], [], '--r')
+        lines.append(line)
+
+    # obstacle_list = []
+    # for obstacle in range(np.shape(obstacles)[2]):
+    #     obstacle = Circle((0, 0), robot_radius,
+    #                       facecolor='aqua', edgecolor='black')
+    #     obstacle_list.append(obstacle)
 
     def init():
         #ax.add_patch(robot_patch)
@@ -42,7 +51,7 @@ def plot_robot_and_obstacles(robots, obstacles, robot_radius, num_steps, sim_tim
             lines[j].set_data(robots[j][0, :i], robots[j][1, :i])
         #robot_patch.center = (robot[0, i], robot[1, i])
         for j in range(len(obstacle_list)):
-            obstacle_list[j].center = (obstacles[0, i, j], obstacles[1, i, j])
+            obstacle_list[j].center = (obstacles[j][0, i], obstacles[j][1, i])
         #line.set_data(robot[0, :i], robot[1, :i])
         return robot_list, lines, obstacle_list
         #return [robot_patch] + [line] + obstacle_list

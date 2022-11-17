@@ -34,6 +34,20 @@ points, = ax.plot(x, y, z, 'o')
 drones = [drone(x[k], y[k], z[k], 0, 1, 0, 0, 0, 0, 0, obs, x[k], y[k] + 10, z[k]) for k in
               range(12)]
 
+u = np.linspace(0, 2*np.pi, 100)
+v = np.linspace(0, np.pi, 100)
+r = 0.5
+
+ax.set_xlim(0, 60)
+ax.set_ylim(0, 60)
+ax.set_zlim(0, 60)
+
+x0 = r * np.outer(np.cos(u), np.sin(v)) + 10
+y0 = r * np.outer(np.sin(u), np.sin(v)) + 10
+z0 = r * np.outer(np.ones(np.size(u)), np.cos(v)) + 50
+
+surface_color = "tab:blue"
+
 def update_points(t, x, y, z, points):
     txt.set_text('num={:d}'.format(t))
     new_x = []
@@ -47,9 +61,12 @@ def update_points(t, x, y, z, points):
         drone_cur.detect_obstacles()
         drone_cur.end_direction()
         px, py, pz, vx, vy, vz, ax, ay, az, t, endx, endy, endz = \
-            drone_cur.x, drone_cur.y, drone_cur.z, drone_cur.vx, drone_cur.vy, drone_cur.vz, drone_cur.ax, drone_cur.ay, drone_cur.az, \
-            drone_cur.t, drone_cur.end_x, drone_cur.end_y, drone_cur.end_z
-        drone_cur = drone(px, py, pz, vx, vy, vz, ax, ay, az, t, obs, endx, endy, endz)
+            drone_cur.position[0], drone_cur.position[1], drone_cur.position[2], \
+            drone_cur.v[0], drone_cur.v[1], drone_cur.v[2], \
+            drone_cur.a[0], drone_cur.a[1], drone_cur.a[2], \
+            drone_cur.t, \
+            drone_cur.end[0], drone_cur.end[1], drone_cur.end[2]
+        # drone_cur = drone(px, py, pz, vx, vy, vz, ax, ay, az, t, obs, endx, endy, endz)
         # px, py, pz, vx, vy, vz, t = drone_cur.x, drone_cur.y, drone_cur.z, drone_cur.vx, drone_cur.vy, drone_cur.vz, drone_cur.t
         # drone_cur = drone(px,py,pz,vx,vy,vz,1 * np.random.randn(),1 * np.random.randn(),1 * np.random.randn(),t)
         new_x.append(px)

@@ -77,7 +77,7 @@ class UAV:
 
         v_sample = np.stack((vx_sample, vy_sample))
         v_satisfying_constraints = self.check_constraints(v_sample, Amat, bvec)
-        v_satisfying_constraints = self.RVO(v_sample, v_B, Dis, angle)
+        v_satisfying_constraints = self.VO(v_sample, v_B, Dis, angle)
 
         # Objective function
         size = np.shape(v_satisfying_constraints)[1]
@@ -247,7 +247,7 @@ def Monitor(obstacles, UAVs, timestep):
 
 
 def simulate(filename):
-    obstacles = create_obstacles(SIM_TIME, NUMBER_OF_TIMESTEPS, 3, 3)
+    obstacles = create_obstacles(SIM_TIME, NUMBER_OF_TIMESTEPS, 2, 2)
     starts = [np.array([6, 0])]
     starts.append(np.array([3, 0]))
     starts.append(np.array([8, 0]))
