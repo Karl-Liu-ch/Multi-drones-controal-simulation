@@ -372,12 +372,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
     ROOT = 'simulation_results/'
     PATH = 'UAVs{}_OBS{}_DN{}_UF{}_ST{}/'.format(4, 8, 0.06, 2, 1.4)
-    for i in range(10):
+    for i in range(4):
         DETECT_NOISE = (i) * 0.02
-        for j in range(5):
+        for j in range(4):
             update_frequency = j + 1
             print("noise: {}, update frequency: {}".format(DETECT_NOISE, update_frequency))
-            for k in range(10):
+            for k in range(7):
                 Safe_Threshold = 1 + 0.1 * (k + 1)
                 PATH = 'UAVs{}_OBS{}_DN{}_UF{}_ST{}/'.format(4, 8, DETECT_NOISE, update_frequency, Safe_Threshold)
                 try:
