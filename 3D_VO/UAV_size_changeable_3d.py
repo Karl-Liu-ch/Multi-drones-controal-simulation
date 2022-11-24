@@ -396,9 +396,9 @@ if __name__ == '__main__':
                 #     args.filename)
                 # visualization(robot_state_history, robots_radius, obs_state_history, obs_radius, obs_heights,
                 #               NUMBER_OF_TIMESTEPS)
-                print(results)
-    robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results = load_uavs_obs(PATH=PATH)
-    plot_robot_and_obstacles(
-        robot_state_history, obs_state_history, robots_radius, obs_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, args.filename)
-    visualization(robot_state_history, robots_radius, obs_state_history, obs_radius, obs_heights, NUMBER_OF_TIMESTEPS)
-    print(results)
+                # print(results)
+    # robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results = load_uavs_obs(PATH=PATH)
+    # plot_robot_and_obstacles(
+    #     robot_state_history, obs_state_history, robots_radius, obs_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, args.filename)
+    # visualization(robot_state_history, robots_radius, obs_state_history, obs_radius, obs_heights, NUMBER_OF_TIMESTEPS)
+    # print(results)
