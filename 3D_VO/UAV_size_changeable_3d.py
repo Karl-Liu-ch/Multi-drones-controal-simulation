@@ -382,10 +382,14 @@ if __name__ == '__main__':
                 PATH = 'UAVs{}_OBS{}_DN{}_UF{}_ST{}/'.format(4, 8, DETECT_NOISE, update_frequency, Safe_Threshold)
                 try:
                     os.mkdir('simulation_results/' + PATH)
-                    UAVs, OBS = simulate(DETECT_NOISE, update_frequency, Safe_Threshold)
-                    print("simulating")
+                    try:
+                        robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results = load_uavs_obs(
+                            PATH=PATH)
+                        print("simulation found")
+                    except:
+                        UAVs, OBS = simulate(DETECT_NOISE, update_frequency, Safe_Threshold)
+                        print("simulating")
                 except:
-                    print("simulation found")
                     pass
                 print("saved noise {} update frequency {} safe threshold {}".format(DETECT_NOISE,
                                                                                     update_frequency, Safe_Threshold))
