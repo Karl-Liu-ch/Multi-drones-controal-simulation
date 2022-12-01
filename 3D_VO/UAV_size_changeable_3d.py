@@ -10,9 +10,6 @@ import os
 SIM_TIME = 20.0
 TIMESTEP = 0.1
 NUMBER_OF_TIMESTEPS = int(SIM_TIME / TIMESTEP)
-# DETECT_NOISE = 0.05
-# update_frequency = 1
-# Safe_Threshold = 1.1
 
 class UAV:
     def __init__(self, position: np.array, velocity: np.array, goal: np.array, robot_radius: float, vmax: float):
@@ -315,7 +312,7 @@ def simulate(DETECT_NOISE = 0.05, update_frequency = 1, Safe_Threshold = 1.1):
         # Update frequency parameter
         OBS.update(i)
         # UAVs.update(OBS.obs, i, update_frequency, DETECT_NOISE, Safe_Threshold)
-        UAVs.update_sim(OBS.obs, i, update_frequency, DETECT_NOISE, Safe_Threshold)
+        UAVs.update(OBS.obs, i, update_frequency, DETECT_NOISE, Safe_Threshold)
         self, obs = Monitor(OBS.obs, UAVs.UAVs, i)
         self_collision += self
         obs_collision += obs
