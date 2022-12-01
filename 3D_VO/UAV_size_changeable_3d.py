@@ -174,6 +174,7 @@ class UAV_cluster():
         goal = np.array([0, 10])
         self.UAVs = [UAV(start, start_velocity, goal, 0.5, 2.0) for i in range(nums_uav)]
         self.path_length = 0.0
+        self.failed = 0
 
     def reset(self, starts, ends, r, v):
         assert len(starts) == len(self.UAVs)
@@ -216,6 +217,7 @@ class UAV_cluster():
                 except:
                     # if drone cannot find a path, then return task failed.
                     print("Number {} Failed to find a path".format(i + 1))
+                    self.failed += 1
                     break
             else:
                 control_vel = self.UAVs[i].velocity
@@ -239,6 +241,7 @@ class UAV_cluster():
                 except:
                     # if drone cannot find a path, then return task failed.
                     print("Number {} Failed to find a path".format(i + 1))
+                    self.failed += 1
                     break
             else:
                 control_vel = self.UAVs[i].velocity
@@ -312,7 +315,7 @@ def simulate(DETECT_NOISE = 0.05, update_frequency = 1, Safe_Threshold = 1.1):
         # Update frequency parameter
         OBS.update(i)
         # UAVs.update(OBS.obs, i, update_frequency, DETECT_NOISE, Safe_Threshold)
-        UAVs.update(OBS.obs, i, update_frequency, DETECT_NOISE, Safe_Threshold)
+        UAVs.update_sim(OBS.obs, i, update_frequency, DETECT_NOISE, Safe_Threshold)
         self, obs = Monitor(OBS.obs, UAVs.UAVs, i)
         self_collision += self
         obs_collision += obs
@@ -332,20 +335,20 @@ def simulate(DETECT_NOISE = 0.05, update_frequency = 1, Safe_Threshold = 1.1):
         os.mkdir('simulation_results/'+PATH)
     except:
         pass
-    save_uavs_obs(UAVs, OBS, self_collision, obs_collision, PATH=PATH)
+    save_uavs_obs(UAVs, OBS, self_collision, obs_collision, UAVs.failed, PATH=PATH)
     # robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights = load_uavs_obs(PATH=PATH)
     # plot_robot_and_obstacles(
     #     robot_state_history, OBS.obs_state_history, UAVs.UAVs[0].robot_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, filename)
     # visualization(robot_state_history, robots_radius, obs_state_history, obs_radius, obs_heights, NUMBER_OF_TIMESTEPS)
     return UAVs, OBS
 
-def save_uavs_obs(UAVs, OBS, self_collision, obs_collision, ROOT='simulation_results/', PATH = ''):
+def save_uavs_obs(UAVs, OBS, self_collision, obs_collision, num_failed, ROOT='simulation_results/', PATH = ''):
     robot_state_history = np.array(UAVs.robot_state_history)
     obs_state_history = np.array(OBS.obs_state_history)
     robots_radius = np.array([robot.robot_radius for robot in UAVs.UAVs])
     obs_radius = np.array([obs.radius for obs in OBS.obs])
     obs_heights = np.array([obs.height for obs in OBS.obs])
-    results = np.array([UAVs.path_length, self_collision, obs_collision])
+    results = np.array([UAVs.path_length, self_collision, obs_collision, num_failed])
     np.save(ROOT + PATH + "robot_state_history.npy", robot_state_history)
     np.save(ROOT + PATH + "obs_state_history.npy", obs_state_history)
     np.save(ROOT + PATH + "robots_radius.npy", robots_radius)

@@ -25,9 +25,10 @@ d = {}
 d['path_length'] = Results[:,0]
 d['self_collision'] = Results[:,1]
 d['obstacles_collision'] = Results[:,2]
-d['DETECT_NOISE'] = Results[:,3]
-d['update_frequency'] = Results[:,4]
-d['Safe_Threshold'] = Results[:,5]
+d['failed'] = Results[:,3]
+d['DETECT_NOISE'] = Results[:,4]
+d['update_frequency'] = Results[:,5]
+d['Safe_Threshold'] = Results[:,6]
 DF = pd.DataFrame(data=d)
 
 def plot_noise_results(update_frequency = 1.0, Safe_Threshold = 1.1):
@@ -97,7 +98,7 @@ def plot_update_results(DETECT_NOISE = 0.02, Safe_Threshold = 1.1):
     plt.plot(update_frequency, path_length, 'ro-', label='Distance')
     plt.plot(update_frequency, self_collision, 'b*-', label='self collision')
     plt.plot(update_frequency, obs_collision, 'g^-', label = 'osbtacle collision')
-    plt.title('update_frequency')
+    plt.title('DETECT_NOISE={}_Safe_Threshold={}'.format(DETECT_NOISE, Safe_Threshold))
     plt.xlabel('update_frequency')
     plt.ylabel('Distance')
     plt.legend()
@@ -135,7 +136,7 @@ def plot_safeThres_results(update_frequency = 1.0, DETECT_NOISE = 1.0):
     plt.plot(Safe_Threshold, path_length, 'ro-', label='Distance')
     plt.plot(Safe_Threshold, self_collision, 'b*-', label='self collision')
     plt.plot(Safe_Threshold, obs_collision, 'g^-', label = 'osbtacle collision')
-    plt.title('Safe_Threshold')
+    plt.title('DETECT_NOISE={}_update_frequency={}'.format(DETECT_NOISE, update_frequency))
     plt.xlabel('Safe_Threshold')
     plt.ylabel('Distance')
     plt.legend()
