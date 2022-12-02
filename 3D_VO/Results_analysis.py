@@ -40,6 +40,7 @@ def plot_noise_results(update_frequency = 1.0, Safe_Threshold = 1.1):
     path_length = []
     self_collision = []
     obs_collision = []
+    faileds = []
     for i in DF.index:
         # print(DF.loc[i, 'update_frequency'])
         if DF.loc[i, 'update_frequency'] == update_frequency:
@@ -49,6 +50,8 @@ def plot_noise_results(update_frequency = 1.0, Safe_Threshold = 1.1):
                 y1 = DF.loc[i, 'path_length']
                 y2 = DF.loc[i, 'self_collision']
                 y3 = DF.loc[i, 'obstacles_collision']
+                y4 = DF.loc[i, 'failed']
+                faileds.append(y4)
                 noise.append(x)
                 path_length.append(y1)
                 self_collision.append(y2)
@@ -59,7 +62,8 @@ def plot_noise_results(update_frequency = 1.0, Safe_Threshold = 1.1):
     obs_collision = np.array(obs_collision)
     plt.plot(noise, path_length, 'ro-', label='Distance')
     plt.plot(noise, self_collision, 'b*-', label='self collision')
-    plt.plot(noise, obs_collision, 'g^-', label = 'osbtacle collision')
+    plt.plot(noise, obs_collision, 'b^-', label = 'osbtacle collision')
+    plt.plot(noise, faileds, 'g^-', label='failed')
     plt.title('update_frequency={}_Safe_Threshold={}'.format(update_frequency, Safe_Threshold))
     plt.xlabel('DETECT_NOISE')
     plt.ylabel('Distance')
@@ -78,6 +82,7 @@ def plot_update_results(DETECT_NOISE = 0.02, Safe_Threshold = 1.1):
     path_length = []
     self_collision = []
     obs_collision = []
+    faileds = []
     for i in DF.index:
         # print(DF.loc[i, 'update_frequency'])
         if DF.loc[i, 'DETECT_NOISE'] == DETECT_NOISE:
@@ -87,6 +92,8 @@ def plot_update_results(DETECT_NOISE = 0.02, Safe_Threshold = 1.1):
                 y1 = DF.loc[i, 'path_length']
                 y2 = DF.loc[i, 'self_collision']
                 y3 = DF.loc[i, 'obstacles_collision']
+                y4 = DF.loc[i, 'failed']
+                faileds.append(y4)
                 update_frequency.append(x)
                 path_length.append(y1)
                 self_collision.append(y2)
@@ -97,7 +104,8 @@ def plot_update_results(DETECT_NOISE = 0.02, Safe_Threshold = 1.1):
     obs_collision = np.array(obs_collision)
     plt.plot(update_frequency, path_length, 'ro-', label='Distance')
     plt.plot(update_frequency, self_collision, 'b*-', label='self collision')
-    plt.plot(update_frequency, obs_collision, 'g^-', label = 'osbtacle collision')
+    plt.plot(update_frequency, obs_collision, 'b^-', label = 'osbtacle collision')
+    plt.plot(update_frequency, faileds, 'g^-', label = 'failed')
     plt.title('DETECT_NOISE={}_Safe_Threshold={}'.format(DETECT_NOISE, Safe_Threshold))
     plt.xlabel('update_frequency')
     plt.ylabel('Distance')
@@ -116,6 +124,7 @@ def plot_safeThres_results(update_frequency = 1.0, DETECT_NOISE = 1.0):
     path_length = []
     self_collision = []
     obs_collision = []
+    faileds = []
     for i in DF.index:
         # print(DF.loc[i, 'update_frequency'])
         if DF.loc[i, 'update_frequency'] == update_frequency:
@@ -125,6 +134,8 @@ def plot_safeThres_results(update_frequency = 1.0, DETECT_NOISE = 1.0):
                 y1 = DF.loc[i, 'path_length']
                 y2 = DF.loc[i, 'self_collision']
                 y3 = DF.loc[i, 'obstacles_collision']
+                y4 = DF.loc[i, 'failed']
+                faileds.append(y4)
                 Safe_Threshold.append(x)
                 path_length.append(y1)
                 self_collision.append(y2)
@@ -135,7 +146,8 @@ def plot_safeThres_results(update_frequency = 1.0, DETECT_NOISE = 1.0):
     obs_collision = np.array(obs_collision)
     plt.plot(Safe_Threshold, path_length, 'ro-', label='Distance')
     plt.plot(Safe_Threshold, self_collision, 'b*-', label='self collision')
-    plt.plot(Safe_Threshold, obs_collision, 'g^-', label = 'osbtacle collision')
+    plt.plot(Safe_Threshold, obs_collision, 'b^-', label = 'osbtacle collision')
+    plt.plot(Safe_Threshold, faileds, 'g^-', label = 'failed')
     plt.title('DETECT_NOISE={}_update_frequency={}'.format(DETECT_NOISE, update_frequency))
     plt.xlabel('Safe_Threshold')
     plt.ylabel('Distance')
