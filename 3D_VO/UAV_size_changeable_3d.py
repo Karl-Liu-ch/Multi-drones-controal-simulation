@@ -116,9 +116,9 @@ class UAV:
         norm = np.linalg.norm(diffs, axis=0)
         min_index = np.where(norm == np.amin(norm))[0][0]
         cmd_vel = (v_satisfying_constraints[:, min_index])
-        if self.collide:
-            cmd_vel = np.array([0, 0])
-            self.velocity = np.array([0, 0])
+        # if self.collide:
+        #     cmd_vel = np.array([0, 0])
+        #     self.velocity = np.array([0, 0])
         return cmd_vel
 
     def VO_ob(self, v, v_B_xy, v_B_yz, Dis_xy, Dis_yz_down, Dis_yz_up, angle_xy, angle_yz_down, angle_yz_up):
@@ -217,8 +217,8 @@ class UAV_cluster():
                     # obstate = obstacles[:, time_step, :] + DETECT_NOISE * np.random.normal(
                     #     size=obstacles[:, time_step, :].shape)
                     control_vel = self.UAVs[i].compute_velocity(obstacles, robots, v_desired, DETECT_NOISE, Safe_Threshold)
-                    if self.UAVs[i].collide == True:
-                        control_vel = np.array([0, 0, 0])
+                    # if self.UAVs[i].collide == True:
+                    #     control_vel = np.array([0, 0, 0])
                 except:
                     # if drone cannot find a path, then return task failed.
                     print("Number {} Failed to find a path".format(i + 1))
@@ -228,7 +228,8 @@ class UAV_cluster():
                 control_vel = self.UAVs[i].velocity
             self.robot_state[i] = self.UAVs[i].update_state(self.robot_state[i], control_vel)
             self.robot_state_history[i][:6, time_step] = self.robot_state[i]
-            self.path_length += self.UAVs[i].path_length
+            if not self.UAVs[i].reach_end:
+                self.path_length += self.UAVs[i].path_length
             if self.UAVs[i].reach_end and self.reachend[i] != 1:
                 self.reachend[i] = 1
                 print(self.reachend)
@@ -244,8 +245,8 @@ class UAV_cluster():
                     # obstate = obstacles[:, time_step, :] + DETECT_NOISE * np.random.normal(
                     #     size=obstacles[:, time_step, :].shape)
                     control_vel = self.UAVs[i].compute_velocity(obstacles, robots, v_desired, DETECT_NOISE, Safe_Threshold)
-                    if self.UAVs[i].collide == True:
-                        control_vel = np.array([0, 0, 0])
+                    # if self.UAVs[i].collide == True:
+                    #     control_vel = np.array([0, 0, 0])
                 except:
                     # if drone cannot find a path, then return task failed.
                     print("Number {} Failed to find a path".format(i + 1))
@@ -260,7 +261,8 @@ class UAV_cluster():
         for i in range(len(self.UAVs)):
             self.robot_state[i] = self.UAVs[i].update_state(self.robot_state[i], control_vels[i])
             self.robot_state_history[i][:6, time_step] = self.robot_state[i]
-            self.path_length += self.UAVs[i].path_length
+            if not self.UAVs[i].reach_end:
+                self.path_length += self.UAVs[i].path_length
 
 def cal_distance(x, y):
     return np.linalg.norm(x - y)
@@ -271,9 +273,9 @@ def Monitor(obstacles, UAVs, timestep):
     for i in range(len(UAVs)-1):
         for j in range(len(UAVs)-i-1):
             d = cal_distance(UAVs[i].position, UAVs[i+j+1].position)
-            if d < UAVs[i].robot_radius + UAVs[i+j+1].robot_radius:
-                # UAVs[i].collide = True
-                # UAVs[j].collide = True
+            if (d < UAVs[i].robot_radius + UAVs[i+j+1].robot_radius) and (not UAVs[i].collide) and (not UAVs[j].collide):
+                UAVs[i].collide = True
+                UAVs[j].collide = True
                 self_collision += 1
                 print("collision of uav {} and uav {}".format(i, i+j+1))
                 print(UAVs[i].position)
@@ -283,8 +285,9 @@ def Monitor(obstacles, UAVs, timestep):
             ob = obstacles[k].position
             h = obstacles[k].height
             d = cal_distance(UAVs[i].position[:2], ob[:2])
-            if (d < UAVs[i].robot_radius + obstacles[k].radius) and (UAVs[i].position[2] < h + UAVs[i].robot_radius):
-                # UAVs[i].collide = True
+            if (d < UAVs[i].robot_radius + obstacles[k].radius) and (UAVs[i].position[2] < h + UAVs[i].robot_radius) \
+                and ( not UAVs[i].collide ):
+                UAVs[i].collide = True
                 obs_collition += 1
                 print(UAVs[i].position)
                 print(obstacles[k].height, obstacles[k].position[:2])
