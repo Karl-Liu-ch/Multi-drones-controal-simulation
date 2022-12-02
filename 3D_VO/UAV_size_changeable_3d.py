@@ -165,6 +165,10 @@ class UAV:
         self.position = new_state[:3]
         self.path_length = np.linalg.norm(self.position - old_position)
         self.velocity = v
+        if np.linalg.norm(self.position - self.goal) < 1e-1:
+            if self.reach_end == False:
+                print("reach end")
+            self.reach_end = True
         return new_state
 
 class UAV_cluster():
@@ -175,6 +179,7 @@ class UAV_cluster():
         self.UAVs = [UAV(start, start_velocity, goal, 0.5, 2.0) for i in range(nums_uav)]
         self.path_length = 0.0
         self.failed = 0
+        self.reachend = np.zeros((nums_uav))
 
     def reset(self, starts, ends, r, v):
         assert len(starts) == len(self.UAVs)
@@ -224,6 +229,9 @@ class UAV_cluster():
             self.robot_state[i] = self.UAVs[i].update_state(self.robot_state[i], control_vel)
             self.robot_state_history[i][:6, time_step] = self.robot_state[i]
             self.path_length += self.UAVs[i].path_length
+            if self.UAVs[i].reach_end:
+                self.reachend[i] = 1
+                print(self.reachend)
 
     def update_sim(self, obstacles, time_step, update_frequency, DETECT_NOISE, Safe_Threshold):
         control_vels = []
@@ -243,6 +251,9 @@ class UAV_cluster():
                     print("Number {} Failed to find a path".format(i + 1))
                     self.failed += 1
                     break
+                if self.UAVs[i].reach_end and self.reachend[i] != 1:
+                    self.reachend[i] = 1
+                    print(self.reachend)
             else:
                 control_vel = self.UAVs[i].velocity
             control_vels.append(control_vel)
@@ -335,14 +346,14 @@ def simulate(DETECT_NOISE = 0.05, update_frequency = 1, Safe_Threshold = 1.1):
         os.mkdir('simulation_results/'+PATH)
     except:
         pass
-    save_uavs_obs(UAVs, OBS, self_collision, obs_collision, UAVs.failed, PATH=PATH)
+    save_uavs_obs(UAVs, OBS, self_collision, obs_collision, UAVs.failed, UAVs.reachend, PATH=PATH)
     # robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights = load_uavs_obs(PATH=PATH)
     # plot_robot_and_obstacles(
     #     robot_state_history, OBS.obs_state_history, UAVs.UAVs[0].robot_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, filename)
     # visualization(robot_state_history, robots_radius, obs_state_history, obs_radius, obs_heights, NUMBER_OF_TIMESTEPS)
     return UAVs, OBS
 
-def save_uavs_obs(UAVs, OBS, self_collision, obs_collision, num_failed, ROOT='simulation_results/', PATH = ''):
+def save_uavs_obs(UAVs, OBS, self_collision, obs_collision, num_failed, reachend, ROOT='simulation_results/', PATH = ''):
     robot_state_history = np.array(UAVs.robot_state_history)
     obs_state_history = np.array(OBS.obs_state_history)
     robots_radius = np.array([robot.robot_radius for robot in UAVs.UAVs])
@@ -355,6 +366,7 @@ def save_uavs_obs(UAVs, OBS, self_collision, obs_collision, num_failed, ROOT='si
     np.save(ROOT + PATH + "obs_radius.npy", obs_radius)
     np.save(ROOT + PATH + "obs_heights.npy", obs_heights)
     np.save(ROOT + PATH + "results.npy", results)
+    np.save(ROOT + PATH + "reachend.npy", reachend)
 
 def load_uavs_obs(ROOT='simulation_results/', PATH = ''):
     robot_state_history = np.load(ROOT + PATH + "robot_state_history.npy")
@@ -363,7 +375,8 @@ def load_uavs_obs(ROOT='simulation_results/', PATH = ''):
     obs_radius = np.load(ROOT + PATH + "obs_radius.npy")
     obs_heights = np.load(ROOT + PATH + "obs_heights.npy")
     results = np.load(ROOT + PATH + "results.npy")
-    return robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results
+    reachend = np.load(ROOT + PATH + "reachend.npy")
+    return robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results, reachend
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -385,7 +398,7 @@ if __name__ == '__main__':
                 except:
                     pass
                 try:
-                    robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results = load_uavs_obs(
+                    robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results, reachend = load_uavs_obs(
                         PATH=PATH)
                     print("simulation found")
                 except:

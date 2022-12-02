@@ -14,10 +14,12 @@ for i in range(10):
             Safe_Threshold = 1 + 0.1 * (k + 1)
             PATH = 'UAVs{}_OBS{}_DN{}_UF{}_ST{}/'.format(4, 8, DETECT_NOISE, update_frequency, Safe_Threshold)
             try:
-                robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results = load_uavs_obs(
+                robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results, reachend = load_uavs_obs(
                     PATH=PATH)
+                print(reachend.shape)
                 parameter = np.array([DETECT_NOISE, update_frequency, Safe_Threshold])
-                Results.append(np.append(results[:], parameter))
+                result = np.append(results[:], parameter)
+                Results.append(np.append(result, reachend))
             except:
                 pass
 Results = np.array(Results)
@@ -29,6 +31,8 @@ d['failed'] = Results[:,3]
 d['DETECT_NOISE'] = Results[:,4]
 d['update_frequency'] = Results[:,5]
 d['Safe_Threshold'] = Results[:,6]
+d['reachend']  = [Results[:, 7:]]
+print(Results[:, 7:])
 DF = pd.DataFrame(data=d)
 
 def plot_noise_results(update_frequency = 1.0, Safe_Threshold = 1.1):
