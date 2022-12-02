@@ -229,7 +229,7 @@ class UAV_cluster():
             self.robot_state[i] = self.UAVs[i].update_state(self.robot_state[i], control_vel)
             self.robot_state_history[i][:6, time_step] = self.robot_state[i]
             self.path_length += self.UAVs[i].path_length
-            if self.UAVs[i].reach_end:
+            if self.UAVs[i].reach_end and self.reachend[i] != 1:
                 self.reachend[i] = 1
                 print(self.reachend)
 
