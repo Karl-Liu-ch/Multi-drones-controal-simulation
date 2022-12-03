@@ -59,6 +59,9 @@ class UAV:
         vx_sample = (vv * np.cos(thzthz) * np.cos(thth)).flatten()
         vy_sample = (vv * np.cos(thzthz) * np.sin(thth)).flatten()
         vz_sample = (vv * np.sin(thzthz)).flatten()
+        vx_sample = np.append(vx_sample, v_desired[0])
+        vy_sample = np.append(vy_sample, v_desired[1])
+        vz_sample = np.append(vz_sample, v_desired[2])
         v_sample = np.stack((vx_sample, vy_sample, vz_sample))
         for i in range(number_of_obstacles):
             obstacle = obstacles[i]
