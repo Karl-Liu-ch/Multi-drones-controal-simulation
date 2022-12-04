@@ -390,7 +390,8 @@ if __name__ == '__main__':
         "-f", "--filename", help="filename, in case you want to save the animation")
     args = parser.parse_args()
     ROOT = 'simulation_results/'
-    PATH = 'UAVs{}_OBS{}_DN{}_UF{}_ST{}/'.format(4, 8, 0.06, 2, 1.4)
+    PATH = 'UAVs{}_OBS{}_DN{}_UF{}_ST{}/'.format(4, 8, 0.06, 2, 1.3)
+
     for i in range(10):
         DETECT_NOISE = (i) * 0.02
         for j in range(5):
@@ -412,16 +413,9 @@ if __name__ == '__main__':
                     print("simulating")
                 print("saved noise {} update frequency {} safe threshold {}".format(DETECT_NOISE,
                                                                                     update_frequency, Safe_Threshold))
-                # robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results = load_uavs_obs(
-                #     PATH=PATH)
-                # plot_robot_and_obstacles(
-                #     robot_state_history, obs_state_history, robots_radius, obs_radius, NUMBER_OF_TIMESTEPS, SIM_TIME,
-                #     args.filename)
-                # visualization(robot_state_history, robots_radius, obs_state_history, obs_radius, obs_heights,
-                #               NUMBER_OF_TIMESTEPS)
-                # print(results)
-    # robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results = load_uavs_obs(PATH=PATH)
-    # plot_robot_and_obstacles(
-    #     robot_state_history, obs_state_history, robots_radius, obs_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, args.filename)
-    # visualization(robot_state_history, robots_radius, obs_state_history, obs_radius, obs_heights, NUMBER_OF_TIMESTEPS)
-    # print(results)
+    # Load simulated results and visualize
+    robot_state_history, obs_state_history, robots_radius, obs_radius, obs_heights, results, reachend = load_uavs_obs(PATH=PATH)
+    plot_robot_and_obstacles(
+        robot_state_history, obs_state_history, robots_radius, obs_radius, NUMBER_OF_TIMESTEPS, SIM_TIME, args.filename)
+    visualization(robot_state_history, robots_radius, obs_state_history, obs_radius, obs_heights, NUMBER_OF_TIMESTEPS)
+    print(results)
